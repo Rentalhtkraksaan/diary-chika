@@ -136,17 +136,29 @@
 
                 <button data-nav="note" class="nav-link text-sm font-medium text-gray-400 hover:text-white transition-colors">Professional Notes</button>
 
+                <a href="finance.html?mode=real" class="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-sm font-semibold transition-all">
+                    <i data-lucide="wallet" class="w-4 h-4"></i>
+                    <span>Keuangan</span>
+                </a>
+
             </div>
 
 
 
-            <button id="add-btn-nav" class="btn-primary text-white px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-lg shadow-purple-500/20 mobile-fab">
+            <div class="flex items-center gap-3">
+                <a href="finance.html?mode=real" class="md:hidden flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs font-semibold" title="Keuangan">
+                    <i data-lucide="wallet" class="w-4 h-4"></i>
+                    <span>Keuangan</span>
+                </a>
 
-                <i data-lucide="plus" class="w-5 h-5 md:w-4 md:h-4"></i>
+                <button id="add-btn-nav" class="btn-primary text-white px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 hover:scale-105 transition-transform shadow-lg shadow-purple-500/20 mobile-fab">
 
-                <span class="hidden md:inline"></span>
+                    <i data-lucide="plus" class="w-5 h-5 md:w-4 md:h-4"></i>
 
-            </button>
+                    <span class="hidden md:inline"></span>
+
+                </button>
+            </div>
 
         </div>
 
@@ -177,6 +189,22 @@
                Dari adit,semangat sayang🫰🏻
 
             </p>
+
+            <!-- Tombol Keuangan (Direct Access / Gak usah PW) -->
+            <div class="mt-8 flex flex-wrap items-center gap-3 justify-center md:justify-start">
+                <a href="finance.html?mode=real" class="flex items-center gap-3 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-500/30 hover:to-teal-500/30 border border-emerald-500/30 text-emerald-300 font-semibold text-sm transition-all hover:scale-[1.02] shadow-xl shadow-emerald-500/10">
+                    <span class="p-2 bg-emerald-500/20 rounded-xl text-emerald-400">
+                        <i data-lucide="wallet" class="w-5 h-5"></i>
+                    </span>
+                    <div class="text-left">
+                        <div class="font-bold text-white text-sm">Atur Keuangan & Multi-Dompet</div>
+                        <div class="text-[11px] text-emerald-400/80">Cash, DANA, SeaBank & Bot WhatsApp</div>
+                    </div>
+                    <span class="ml-2 text-[10px] px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 font-mono flex items-center gap-1 border border-emerald-500/30">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> Masuk Langsung
+                    </span>
+                </a>
+            </div>
 
         </header>
 

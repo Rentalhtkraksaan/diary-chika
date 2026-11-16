@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="id" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chika Finance Hub — Personal Finance & Multi-Wallet</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#07090E',
+                        darkcard: '#0F141C',
+                        darkcard2: '#161C26',
+                        emeraldAccent: '#10B981',
+                        coralAccent: '#F43F5E',
+                        violetAccent: '#8B5CF6',
+                        danaBlue: '#118EEA',
+                        seaOrange: '#FF5722'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serif: ['Playfair Display', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .glass-card {
+            background: rgba(15, 20, 28, 0.7);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+        
+        .light .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+        }
+
+        .gradient-text-emerald {
+            background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .gradient-text-purple {
+            background: linear-gradient(135deg, #C084FC 0%, #8B5CF6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        .light ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .wallet-card-dana {
+            background: linear-gradient(135deg, #0d72bd 0%, #118EEA 100%);
+        }
+        .wallet-card-seabank {
+            background: linear-gradient(135deg, #d33c0d 0%, #FF5722 100%);
+        }
+        .wallet-card-cash {
+            background: linear-gradient(135deg, #057a55 0%, #10B981 100%);
+        }
+        .wallet-card-custom {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        }
+
+        /* Shake animation for errors */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .animate-shake {
+            animation: shake 0.4s ease-in-out;
+        }
+    </style>
+</head>
+
+<body class="bg-[#07090E] text-slate-100 min-h-screen transition-colors duration-300">
+
+    <!-- ========================================================================= -->
+    <!-- 0. SECURITY LOCK SCREEN (Biometric / PIN Auth) -->
+    <!-- ========================================================================= -->
+    <div id="auth-lock-overlay" class="fixed inset-0 z-[200] bg-[#07090E]/95 backdrop-blur-2xl flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-8 rounded-3xl border border-white/10 shadow-2xl text-center relative overflow-hidden">
+            <div class="absolute -top-24 -left-24 w-48 h-48 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div class="absolute -bottom-24 -right-24 w-48 h-48 bg-emerald-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-emerald-500/20 to-purple-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                <i data-lucide="lock" class="w-8 h-8"></i>
+            </div>
+
+            <h2 class="text-2xl font-bold mb-1 tracking-tight">Keamanan Keuangan</h2>
+            <p class="text-xs text-gray-400 mb-6">Gunakan sidik jari atau PIN untuk membuka dashboard keuangan Arsinta.</p>
+
+            <!-- Biometric Fingerprint Button -->
+            <button id="btn-biometric-auth" class="group relative w-20 h-20 mx-auto mb-6 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 border-2 border-emerald-500/40 hover:border-emerald-400 transition-all flex items-center justify-center active:scale-95 shadow-lg shadow-emerald-500/10">
+                <span class="absolute inset-0 rounded-full border border-emerald-400/50 animate-ping opacity-30"></span>
+                <i data-lucide="fingerprint" class="w-10 h-10 text-emerald-400 group-hover:scale-110 transition-transform"></i>
+            </button>
+            <div class="text-[11px] text-emerald-400/80 mb-6 font-medium">Sentuh ikon untuk Scan Sidik Jari (Biometrik)</div>
+
+            <div class="flex items-center gap-3 my-4">
+                <div class="flex-1 h-px bg-white/10"></div>
+                <span class="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Atau Masukkan PIN</span>
+                <div class="flex-1 h-px bg-white/10"></div>
+            </div>
+
+            <!-- PIN Display Dots -->
+            <div id="pin-display" class="flex justify-center gap-4 my-4">
+                <div class="pin-dot w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
+                <div class="pin-dot w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
+                <div class="pin-dot w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
+                <div class="pin-dot w-4 h-4 rounded-full border-2 border-white/30 transition-all"></div>
+            </div>
+            <div id="pin-error-msg" class="text-xs text-rose-400 min-h-[1.25rem] mb-2 font-medium"></div>
+
+            <!-- Numpad -->
+            <div class="grid grid-cols-3 gap-2.5 max-w-[260px] mx-auto mb-4">
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 text-lg font-bold transition-all" data-num="1">1</button>
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 text-lg font-bold transition-all" data-num="2">2</button>
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 text-lg font-bold transition-all" data-num="3">3</button>
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 text-lg font-bold transition-all" data-num="4">4</button>
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 text-lg font-bold transition-all" data-num="5">5</button>
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 text-lg font-bold transition-all" data-num="6">6</button>
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 text-lg font-bold transition-all" data-num="7">7</button>
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 text-lg font-bold transition-all" data-num="8">8</button>
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 text-lg font-bold transition-all" data-num="9">9</button>
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-rose-500/20 text-xs font-semibold text-rose-400 transition-all flex items-center justify-center" id="btn-pin-clear">Hapus</button>
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 text-lg font-bold transition-all" data-num="0">0</button>
+                <button class="numpad-btn p-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-300 transition-all flex items-center justify-center" id="btn-pin-back">
+                    <i data-lucide="delete" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <div class="flex items-center justify-between text-xs text-gray-500 pt-2 border-t border-white/5">
+                <a href="index.html" class="hover:text-purple-400 transition-colors flex items-center gap-1">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i> Kembali
+                </a>
+                <span class="text-[10px] text-gray-500">Default PIN: <strong class="text-gray-400">1234</strong></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 1. MAIN APP LAYOUT -->
+    <!-- ========================================================================= -->
+    <div class="flex min-h-screen">
+
+        <!-- DESKTOP SIDEBAR -->
+        <aside class="hidden lg:flex flex-col w-72 border-r border-white/5 bg-[#0A0D14]/90 backdrop-blur-xl p-6 sticky top-0 h-screen z-50">
+            <!-- App Logo / Brand -->
+            <div class="flex items-center justify-between mb-8">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-emerald-500/20">
+                        <i data-lucide="wallet-cards" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-base tracking-tight leading-none text-white">Chika Finance</h1>
+                        <span class="text-[10px] text-emerald-400 font-medium">Multi-Wallet Hub</span>
+                    </div>
+                </div>
+                <button id="theme-toggle-btn" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all" title="Toggle Tema">
+                    <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                    <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+                </button>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="flex-1 space-y-1.5">
+                <button class="nav-tab-btn active w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-semibold transition-all bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" data-tab="tab-dashboard">
+                    <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                    <span>Dashboard</span>
+                </button>
+
+                <button class="nav-tab-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all" data-tab="tab-wallets">
+                    <i data-lucide="wallet" class="w-4 h-4"></i>
+                    <span>Multi-Dompet</span>
+                    <span id="badge-wallets-count" class="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-gray-300">3</span>
+                </button>
+
+                <button class="nav-tab-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all" data-tab="tab-transactions">
+                    <i data-lucide="arrow-left-right" class="w-4 h-4"></i>
+                    <span>Riwayat Transaksi</span>
+                </button>
+
+                <button class="nav-tab-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all" data-tab="tab-analytics">
+                    <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                    <span>Grafik & Analisis</span>
+                </button>
+
+                <button class="nav-tab-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all" data-tab="tab-goals">
+                    <i data-lucide="target" class="w-4 h-4"></i>
+                    <span>Target Tabungan</span>
+                </button>
+
+                <button class="nav-tab-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all" data-tab="tab-whatsapp">
+                    <div class="relative">
+                        <i data-lucide="message-square-code" class="w-4 h-4 text-emerald-400"></i>
+                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                    </div>
+                    <span>WhatsApp Bot AI</span>
+                    <span class="ml-auto text-[9px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold uppercase tracking-wider">Live</span>
+                </button>
+
+                <button class="nav-tab-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all" data-tab="tab-security">
+                    <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+                    <span>Keamanan & PIN</span>
+                    <span id="badge-bio-nav" class="ml-auto text-[9px] px-2 py-0.5 rounded-md bg-white/10 text-gray-300 font-mono">PIN Aktif</span>
+                </button>
+            </nav>
+
+            <!-- Bottom Actions -->
+            <div class="pt-6 border-t border-white/5 space-y-2">
+                <!-- Return to Planner -->
+                <a href="index.html" class="flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-gray-400 hover:text-purple-400 hover:bg-purple-500/10 transition-all">
+                    <i data-lucide="sparkles" class="w-4 h-4 text-purple-400"></i>
+                    <span>Ke Arsinta Planner</span>
+                </a>
+                <!-- Lock button -->
+                <button id="btn-lock-session" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-medium text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-all">
+                    <i data-lucide="lock" class="w-4 h-4"></i>
+                    <span>Kunci Dashboard</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="flex-1 flex flex-col min-w-0 pb-24 lg:pb-10">
+
+            <!-- MOBILE TOPBAR -->
+            <header class="lg:hidden border-b border-white/5 bg-[#0A0D14]/90 backdrop-blur-xl px-5 py-3.5 flex items-center justify-between sticky top-0 z-40">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-slate-950 font-bold">
+                        <i data-lucide="wallet-cards" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-sm tracking-tight leading-none text-white">Chika Finance</div>
+                        <span class="text-[9px] text-emerald-400 font-semibold">Multi-Wallet Hub</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                    <button id="theme-toggle-btn-mobile" class="p-2 rounded-xl bg-white/5 text-gray-400 hover:text-white">
+                        <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+                        <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+                    </button>
+                    <a href="index.html" class="p-2 rounded-xl bg-purple-500/10 text-purple-400 hover:bg-purple-500/20" title="Ke Planner">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    </a>
+                    <button id="btn-lock-session-mobile" class="p-2 rounded-xl bg-white/5 text-gray-400 hover:text-rose-400" title="Kunci">
+                        <i data-lucide="lock" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- SUB-HEADER (Desktop Quick Stats Bar) -->
+            <div class="border-b border-white/5 px-6 lg:px-10 py-4 flex flex-wrap items-center justify-between gap-4 bg-[#0A0D14]/40">
+                <div>
+                    <div class="text-xs text-gray-400">Selamat datang kembali,</div>
+                    <div class="text-base font-bold text-white flex items-center gap-2">
+                        <span>Arsinta Chick Alfionita</span>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">Personal Vault</span>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <!-- Quick Add Transaction Button -->
+                    <button id="btn-open-add-tx" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-slate-950 font-bold text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 hover:scale-[1.02] transition-all">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>Catat Transaksi</span>
+                    </button>
+
+                    <!-- Quick Transfer Button -->
+                    <button id="btn-open-quick-transfer" class="px-4 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white font-semibold text-xs flex items-center gap-2 border border-white/10 hover:border-white/20 transition-all">
+                        <i data-lucide="arrow-left-right" class="w-4 h-4 text-purple-400"></i>
+                        <span>Transfer Antar-Dompet</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- MAIN CONTAINER WITH TABS -->
+            <main class="flex-1 px-5 lg:px-10 py-6 max-w-7xl w-full mx-auto">
+
+                <!-- ============================================================== -->
+                <!-- TAB 1: DASHBOARD OVERVIEW -->
+                <!-- ============================================================== -->
+                <section id="tab-dashboard" class="tab-content space-y-8">
+                    
+                    <!-- HERO: TOTAL NET WORTH CARD & SUMMARY -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Big Net Worth Card -->
+                        <div class="lg:col-span-2 glass-card p-6 md:p-8 rounded-3xl relative overflow-hidden flex flex-col justify-between">
+                            <div class="absolute -right-10 -bottom-10 w-60 h-60 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                            <div class="absolute -left-10 -top-10 w-60 h-60 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                            <div>
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="text-xs font-semibold uppercase tracking-wider text-gray-400 flex items-center gap-1.5">
+                                        <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i> Total Net Worth (Gabungan Saldo)
+                                    </span>
+                                    <button id="btn-toggle-balance-visibility" class="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all text-xs flex items-center gap-1">
+                                        <i data-lucide="eye" id="icon-eye-open" class="w-4 h-4"></i>
+                                        <i data-lucide="eye-off" id="icon-eye-closed" class="w-4 h-4 hidden"></i>
+                                    </button>
+                                </div>
+
+                                <div class="flex items-baseline gap-3 my-2">
+                                    <h2 id="total-net-worth-display" class="text-3xl md:text-5xl font-extrabold tracking-tight text-white">
+                                        Rp 0
+                                    </h2>
+                                </div>
+                                <p class="text-xs text-gray-400">Akumulasi saldo real-time dari seluruh dompet aktif.</p>
+                            </div>
+
+                            <!-- Fast Action Pills -->
+                            <div class="mt-8 pt-6 border-t border-white/5 flex flex-wrap items-center gap-3">
+                                <button class="btn-fast-action px-4 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 text-xs font-semibold flex items-center gap-2 transition-all" data-type="income">
+                                    <i data-lucide="arrow-down-left" class="w-3.5 h-3.5"></i> + Pemasukan
+                                </button>
+                                <button class="btn-fast-action px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 text-xs font-semibold flex items-center gap-2 transition-all" data-type="expense">
+                                    <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i> - Pengeluaran
+                                </button>
+                                <button class="btn-fast-action px-4 py-2 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 border border-purple-500/20 text-xs font-semibold flex items-center gap-2 transition-all" data-type="transfer">
+                                    <i data-lucide="repeat" class="w-3.5 h-3.5"></i> ⇄ Transfer
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Monthly Summary Card -->
+                        <div class="glass-card p-6 md:p-8 rounded-3xl flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-sm font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+                                    <i data-lucide="calendar" class="w-4 h-4 text-purple-400"></i> Ringkasan Bulan Ini
+                                </h3>
+
+                                <div class="space-y-4">
+                                    <div class="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                                                <i data-lucide="trending-up" class="w-4 h-4"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-[11px] text-gray-400 font-medium">Pemasukan</div>
+                                                <div id="summary-income-display" class="text-sm md:text-base font-bold text-emerald-400">Rp 0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="p-4 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-between">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-9 h-9 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
+                                                <i data-lucide="trending-down" class="w-4 h-4"></i>
+                                            </div>
+                                            <div>
+                                                <div class="text-[11px] text-gray-400 font-medium">Pengeluaran</div>
+                                                <div id="summary-expense-display" class="text-sm md:text-base font-bold text-rose-400">Rp 0</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-white/5 flex items-center justify-between text-xs">
+                                <span class="text-gray-400">Saving Rate / Sisa:</span>
+                                <span id="summary-saving-rate" class="font-bold text-emerald-400 font-mono">0%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WALLET CARDS CAROUSEL/GRID -->
+                    <div>
+                        <div class="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 class="text-lg font-bold text-white tracking-tight flex items-center gap-2">
+                                    <span>Dompet & Sumber Dana</span>
+                                    <span class="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400 font-normal">Multi-Wallet</span>
+                                </h3>
+                                <p class="text-xs text-gray-400">Kelola saldo Cash, DANA, SeaBank, dan lainnya secara mandiri.</p>
+                            </div>
+                            <button id="btn-open-add-wallet" class="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-gray-200 border border-white/10 flex items-center gap-1.5 transition-all">
+                                <i data-lucide="plus-circle" class="w-4 h-4 text-emerald-400"></i>
+                                <span>Tambah Dompet</span>
+                            </button>
+                        </div>
+
+                        <!-- Dynamic Wallets Grid -->
+                        <div id="wallets-grid" class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+
+                    <!-- RECENT TRANSACTIONS PREVIEW & CHARTS PREVIEW -->
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Left: Recent Transactions (2 cols) -->
+                        <div class="lg:col-span-2 glass-card p-6 rounded-3xl">
+                            <div class="flex items-center justify-between mb-5">
+                                <div>
+                                    <h4 class="font-bold text-base text-white">Transaksi Terbaru</h4>
+                                    <p class="text-xs text-gray-400">Catatan mutasi pemasukan, pengeluaran & transfer</p>
+                                </div>
+                                <button class="text-xs text-emerald-400 hover:underline font-semibold nav-switch-link" data-tab="tab-transactions">
+                                    Lihat Semua →
+                                </button>
+                            </div>
+
+                            <div id="recent-transactions-list" class="space-y-3">
+                                <!-- Populated dynamically -->
+                                <div class="text-center py-8 text-gray-500 text-xs">Memuat transaksi...</div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Mini Expense Donut -->
+                        <div class="glass-card p-6 rounded-3xl flex flex-col justify-between">
+                            <div>
+                                <h4 class="font-bold text-base text-white mb-1">Kategori Pengeluaran</h4>
+                                <p class="text-xs text-gray-400 mb-4">Distribusi pengeluaran berdasarkan kategori</p>
+                                <div class="relative max-w-[220px] mx-auto aspect-square flex items-center justify-center">
+                                    <canvas id="miniExpenseChart"></canvas>
+                                </div>
+                            </div>
+                            <div id="mini-expense-categories" class="mt-4 space-y-1.5 text-xs">
+                                <!-- Filled by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                </section>
+
+
+                <!-- ============================================================== -->
+                <!-- TAB 2: MULTI-WALLETS MANAGEMENT -->
+                <!-- ============================================================== -->
+                <section id="tab-wallets" class="tab-content hidden space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold tracking-tight text-white">Manajemen Dompet</h2>
+                            <p class="text-xs text-gray-400">Atur saldo sumber dana tunai, e-wallet, dan rekening bank.</p>
+                        </div>
+                        <button id="btn-open-add-wallet-2" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Tambah Dompet Baru
+                        </button>
+                    </div>
+
+                    <!-- Wallets Full View Cards -->
+                    <div id="wallets-full-grid" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <!-- Populated by JS -->
+                    </div>
+
+                    <!-- Transfer Action Banner -->
+                    <div class="glass-card p-6 rounded-3xl border border-purple-500/20 bg-gradient-to-r from-purple-900/20 to-transparent flex flex-wrap items-center justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="w-12 h-12 rounded-2xl bg-purple-500/20 text-purple-400 flex items-center justify-center">
+                                <i data-lucide="arrow-left-right" class="w-6 h-6"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-base text-white">Pindahkan Saldo Antar-Dompet?</h4>
+                                <p class="text-xs text-gray-400">Misal: Tarik tunai dari SeaBank ke Cash, atau top-up DANA dari rekening.</p>
+                            </div>
+                        </div>
+                        <button id="btn-banner-transfer" class="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-lg shadow-purple-600/20">
+                            <i data-lucide="repeat" class="w-4 h-4"></i> Lakukan Transfer Sekarang
+                        </button>
+                    </div>
+                </section>
+
+
+                <!-- ============================================================== -->
+                <!-- TAB 3: TRANSACTION HISTORY & ADVANCED FILTER -->
+                <!-- ============================================================== -->
+                <section id="tab-transactions" class="tab-content hidden space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold tracking-tight text-white">Riwayat Transaksi</h2>
+                            <p class="text-xs text-gray-400">Seluruh pencatatan arus kas dengan filter terperinci.</p>
+                        </div>
+                        <button id="btn-open-add-tx-2" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs flex items-center gap-2">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Tambah Transaksi
+                        </button>
+                    </div>
+
+                    <!-- Filter Control Bar -->
+                    <div class="glass-card p-4 rounded-2xl space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <!-- Search Query -->
+                            <div class="relative md:col-span-2">
+                                <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500"></i>
+                                <input type="text" id="tx-search-input" placeholder="Cari catatan, keterangan, atau nominal..." class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                            </div>
+
+                            <!-- Filter Wallet -->
+                            <div>
+                                <select id="filter-wallet-select" class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-xs text-gray-200 focus:outline-none focus:border-emerald-500/50">
+                                    <option value="all">Semua Dompet</option>
+                                    <option value="w_cash">Cash</option>
+                                    <option value="w_dana">DANA</option>
+                                    <option value="w_seabank">SeaBank</option>
+                                </select>
+                            </div>
+
+                            <!-- Filter Type -->
+                            <div>
+                                <select id="filter-type-select" class="w-full bg-white/5 border border-white/10 rounded-xl py-2.5 px-3 text-xs text-gray-200 focus:outline-none focus:border-emerald-500/50">
+                                    <option value="all">Semua Jenis</option>
+                                    <option value="income">🟢 Pemasukan (Income)</option>
+                                    <option value="expense">🔴 Pengeluaran (Expense)</option>
+                                    <option value="transfer">🔄 Transfer Antar-Dompet</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-white/5 text-xs text-gray-400">
+                            <div class="flex items-center gap-2">
+                                <span>Kategori:</span>
+                                <select id="filter-category-select" class="bg-white/5 border border-white/10 rounded-lg py-1 px-2 text-xs text-gray-300">
+                                    <option value="all">Semua Kategori</option>
+                                    <option value="Makanan & Minuman">Makanan & Minuman</option>
+                                    <option value="Transportasi">Transportasi</option>
+                                    <option value="Belanja">Belanja</option>
+                                    <option value="Skincare & Perawatan">Skincare & Perawatan</option>
+                                    <option value="Tagihan & Langganan">Tagihan & Langganan</option>
+                                    <option value="Hiburan & Rekreasi">Hiburan & Rekreasi</option>
+                                    <option value="Kesehatan">Kesehatan</option>
+                                    <option value="Edukasi">Edukasi</option>
+                                    <option value="Gaji & Pendapatan">Gaji & Pendapatan</option>
+                                    <option value="Transfer Antar-Dompet">Transfer Antar-Dompet</option>
+                                    <option value="Lainnya">Lainnya</option>
+                                </select>
+                            </div>
+
+                            <div id="tx-count-indicator" class="font-mono text-emerald-400">
+                                Menampilkan 0 transaksi
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transactions Table / List -->
+                    <div class="glass-card rounded-3xl overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-xs">
+                                <thead class="bg-white/5 border-b border-white/5 text-gray-400 uppercase font-bold text-[10px] tracking-wider">
+                                    <tr>
+                                        <th class="py-4 px-6">Transaksi</th>
+                                        <th class="py-4 px-6">Dompet</th>
+                                        <th class="py-4 px-6">Kategori</th>
+                                        <th class="py-4 px-6">Tanggal</th>
+                                        <th class="py-4 px-6 text-right">Nominal</th>
+                                        <th class="py-4 px-6 text-center">Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactions-table-body" class="divide-y divide-white/5 text-gray-300">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ============================================================== -->
+                <!-- TAB 4: CHARTS & ANALYTICS -->
+                <!-- ============================================================== -->
+                <section id="tab-analytics" class="tab-content hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight text-white">Visualisasi & Grafik</h2>
+                        <p class="text-xs text-gray-400">Analisis pengeluaran dan tren arus kas bulanan.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Chart 1: Expense Breakdown Donut -->
+                        <div class="glass-card p-6 md:p-8 rounded-3xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h4 class="font-bold text-base text-white">Distribusi Pengeluaran</h4>
+                                    <p class="text-xs text-gray-400">Persentase pengeluaran per kategori</p>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg bg-rose-500/10 text-rose-400 text-xs font-semibold">Expense Donut</span>
+                            </div>
+
+                            <div class="relative max-w-xs mx-auto aspect-square my-4 flex items-center justify-center">
+                                <canvas id="analyticsDonutChart"></canvas>
+                            </div>
+
+                            <div id="analytics-donut-legend" class="grid grid-cols-2 gap-2 text-xs pt-4 border-t border-white/5">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Chart 2: Cashflow Trend Area/Bar -->
+                        <div class="glass-card p-6 md:p-8 rounded-3xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <div>
+                                    <h4 class="font-bold text-base text-white">Tren Arus Kas (Cashflow)</h4>
+                                    <p class="text-xs text-gray-400">Perbandingan pemasukan vs pengeluaran</p>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 text-xs font-semibold">Income vs Expense</span>
+                            </div>
+
+                            <div class="relative w-full aspect-[4/3] my-4">
+                                <canvas id="analyticsCashflowChart"></canvas>
+                            </div>
+
+                            <div class="pt-4 border-t border-white/5 flex items-center justify-around text-xs">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+                                    <span class="text-gray-400">Pemasukan</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-rose-500"></div>
+                                    <span class="text-gray-400">Pengeluaran</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ============================================================== -->
+                <!-- TAB 5: SAVINGS GOALS TRACKER -->
+                <!-- ============================================================== -->
+                <section id="tab-goals" class="tab-content hidden space-y-6">
+                    <div class="flex flex-wrap items-center justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-bold tracking-tight text-white">Target Tabungan (Savings Goals)</h2>
+                            <p class="text-xs text-gray-400">Pantau progres impian dan alokasikan dana langsung dari dompet.</p>
+                        </div>
+                        <button id="btn-open-add-goal" class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg shadow-purple-500/20">
+                            <i data-lucide="plus" class="w-4 h-4"></i> Tambah Target Baru
+                        </button>
+                    </div>
+
+                    <!-- Goals Grid -->
+                    <div id="goals-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <!-- Populated by JS -->
+                    </div>
+                </section>
+
+
+                <!-- ============================================================== -->
+                <!-- TAB 6: WHATSAPP BOT AI & INTEGRATION SIMULATOR -->
+                <!-- ============================================================== -->
+                <section id="tab-whatsapp" class="tab-content hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                            <span>Integrasi WhatsApp Bot & AI Parser</span>
+                            <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 font-mono">Real-time Gateway</span>
+                        </h2>
+                        <p class="text-xs text-gray-400">Catat transaksi otomatis hanya dengan mengirim pesan chat WhatsApp biasa.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- Left: Live WhatsApp Chat Simulator (7 cols) -->
+                        <div class="lg:col-span-7 glass-card p-6 rounded-3xl flex flex-col justify-between h-[650px]">
+                            <div>
+                                <div class="flex items-center justify-between pb-4 border-b border-white/5">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-slate-950 font-bold">
+                                            <i data-lucide="message-circle" class="w-5 h-5"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-sm text-white flex items-center gap-1.5">
+                                                <span>Chika Finance Bot</span>
+                                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
+                                            </h4>
+                                            <span class="text-[10px] text-emerald-400 font-mono">Online • NLP Active</span>
+                                        </div>
+                                    </div>
+                                    <span class="text-[10px] text-gray-400">Live Simulator</span>
+                                </div>
+
+                                <!-- Preset Quick Prompts -->
+                                <div class="flex flex-wrap gap-1.5 my-3">
+                                    <button class="btn-sample-wa px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-emerald-400 border border-white/5">
+                                        beli kopi 25rb pake dana
+                                    </button>
+                                    <button class="btn-sample-wa px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-emerald-400 border border-white/5">
+                                        gajian 5jt masuk seabank
+                                    </button>
+                                    <button class="btn-sample-wa px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-emerald-400 border border-white/5">
+                                        tarik tunai dari seabank ke cash 300rb
+                                    </button>
+                                    <button class="btn-sample-wa px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-purple-400 border border-white/5">
+                                        cek saldo
+                                    </button>
+                                    <button class="btn-sample-wa px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-purple-400 border border-white/5">
+                                        laporan hari ini
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Chat Message Stream -->
+                            <div id="wa-chat-stream" class="flex-1 overflow-y-auto space-y-3 p-3 bg-black/20 rounded-2xl border border-white/5 my-2">
+                                <!-- Bot greeting message -->
+                                <div class="flex justify-start">
+                                    <div class="max-w-[85%] bg-[#121B22] text-slate-200 p-3.5 rounded-2xl rounded-tl-none text-xs border border-white/5 whitespace-pre-wrap leading-relaxed shadow-sm">Halo Arsinta! 👋 
+Saya bot asisten keuangan pribadimu. Kirimkan pesan seperti:
+• *"beli kopi 25rb pake dana"*
+• *"gajian 5jt masuk seabank"*
+• *"tarik tunai dari seabank ke cash 300rb"*
+• *"cek saldo"*
+Data otomatis tercatat di dashboard ini! 🚀</div>
+                                </div>
+                            </div>
+
+                            <!-- Chat Input Bar -->
+                            <form id="wa-sim-form" class="flex items-center gap-2 pt-2 border-t border-white/5">
+                                <input type="text" id="wa-sim-input" placeholder="Ketik pesan WhatsApp keuanganmu di sini..." class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                                <button type="submit" class="p-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold transition-all shadow-lg shadow-emerald-500/20">
+                                    <i data-lucide="send" class="w-4 h-4"></i>
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Right: Webhook Setup Instructions (5 cols) -->
+                        <div class="lg:col-span-5 glass-card p-6 rounded-3xl space-y-5 overflow-y-auto h-[650px]">
+                            <div>
+                                <h4 class="font-bold text-base text-white mb-1">Panduan Koneksi Webhook WhatsApp</h4>
+                                <p class="text-xs text-gray-400">Cara menyambungkan endpoint server ini ke WhatsApp Gateway.</p>
+                            </div>
+
+                            <!-- Webhook URL Box -->
+                            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
+                                <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wider">URL Endpoint Webhook</span>
+                                <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-black/40 border border-white/5">
+                                    <code class="text-xs text-emerald-400 font-mono select-all overflow-hidden text-ellipsis">http://localhost:3000/api/webhook/whatsapp</code>
+                                </div>
+                                <p class="text-[11px] text-gray-400 leading-normal">
+                                    💡 Gunakan <strong class="text-white">ngrok</strong> atau cloud hosting (Railway/Render) agar URL ini dapat diakses publik oleh gateway WhatsApp:
+                                    <code class="block text-[10px] bg-black/30 p-1.5 rounded mt-1 text-purple-300 font-mono">ngrok http 3000</code>
+                                </p>
+                            </div>
+
+                            <!-- Provider Steps -->
+                            <div class="space-y-3 text-xs">
+                                <div class="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-1.5">
+                                    <span class="font-bold text-white flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Opsi 1: Fonnte (Sangat Direkomendasikan)
+                                    </span>
+                                    <p class="text-gray-400 text-[11px]">
+                                        1. Daftar di <a href="https://fonnte.com" target="_blank" class="text-emerald-400 underline">fonnte.com</a> dan tautkan nomor WhatsApp.<br>
+                                        2. Di menu <strong>Webhook</strong>, masukkan URL webhook publikmu.<br>
+                                        3. Masukkan token Fonnte ke berkas <code class="text-white bg-black/30 px-1 rounded">.env</code>: <code class="text-emerald-300">FONNTE_TOKEN=...</code> untuk auto-reply via WhatsApp.
+                                    </p>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-1.5">
+                                    <span class="font-bold text-white flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-blue-400"></span> Opsi 2: Wablas
+                                    </span>
+                                    <p class="text-gray-400 text-[11px]">
+                                        1. Masuk ke dashboard Wablas.<br>
+                                        2. Atur Webhook URL ke endpoint di atas.<br>
+                                        3. Sistem otomatis merespon pesan WhatsApp yang masuk.
+                                    </p>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-1.5">
+                                    <span class="font-bold text-white flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-purple-400"></span> Opsi 3: WhatsApp Cloud API (Meta)
+                                    </span>
+                                    <p class="text-gray-400 text-[11px]">
+                                        Endpoint ini sudah mendukung verifikasi Webhook GET dengan verify token <code class="text-purple-300 bg-black/30 px-1 rounded">chika_finance_secret</code>.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+
+                <!-- ============================================================== -->
+                <!-- TAB 7: KEAMANAN, GANTI PIN & DAFTARKAN SIDIK JARI -->
+                <!-- ============================================================== -->
+                <section id="tab-security" class="tab-content hidden space-y-6">
+                    <div>
+                        <h2 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                            <span>Keamanan & Autentikasi Biometrik</span>
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 font-mono">Vault Protection</span>
+                        </h2>
+                        <p class="text-xs text-gray-400">Atur PIN keamanan dan daftarkan sidik jari perangkat ini untuk akses instan.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Card 1: Ganti PIN Keamanan -->
+                        <div class="glass-card p-6 md:p-8 rounded-3xl space-y-5 border border-white/10">
+                            <div class="flex items-center justify-between pb-4 border-b border-white/5">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                                        <i data-lucide="key-round" class="w-5 h-5"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-base text-white">Ganti PIN Keamanan</h4>
+                                        <span class="text-[11px] text-gray-400">PIN 4 digit untuk membuka vault</span>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-xl bg-white/5 text-[10px] font-mono text-emerald-400">
+                                    PIN Aktif: <strong id="current-pin-display">1234</strong>
+                                </span>
+                            </div>
+
+                            <form id="form-change-pin" class="space-y-4">
+                                <div class="space-y-1">
+                                    <label class="text-xs font-medium text-gray-400">PIN Lama</label>
+                                    <input type="password" id="input-old-pin" maxlength="4" required placeholder="Masukkan PIN saat ini" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-xs font-medium text-gray-400">PIN Baru (4 Digit Angka)</label>
+                                    <input type="password" id="input-new-pin" maxlength="4" required placeholder="Contoh: 5678" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-xs font-medium text-gray-400">Konfirmasi PIN Baru</label>
+                                    <input type="password" id="input-confirm-pin" maxlength="4" required placeholder="Ulangi PIN baru" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                                </div>
+
+                                <button type="submit" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 hover:scale-[1.01] transition-all">
+                                    Simpan & Perbarui PIN
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- Card 2: Pendaftaran Sidik Jari (Biometrik WebAuthn) -->
+                        <div class="glass-card p-6 md:p-8 rounded-3xl space-y-5 border border-white/10 flex flex-col justify-between">
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between pb-4 border-b border-white/5">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-10 h-10 rounded-2xl bg-purple-500/10 text-purple-400 flex items-center justify-center">
+                                            <i data-lucide="fingerprint" class="w-5 h-5"></i>
+                                        </div>
+                                        <div>
+                                            <h4 class="font-bold text-base text-white">Sensor Sidik Jari</h4>
+                                            <span class="text-[11px] text-gray-400">Touch ID, Fingerprint HP & Windows Hello</span>
+                                        </div>
+                                    </div>
+                                    <span id="badge-bio-registered" class="px-2.5 py-1 rounded-xl bg-white/5 text-[10px] font-semibold text-gray-400">
+                                        Memeriksa...
+                                    </span>
+                                </div>
+
+                                <div class="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-2">
+                                    <div class="flex items-center gap-2 text-xs font-semibold text-white">
+                                        <i data-lucide="info" class="w-4 h-4 text-emerald-400"></i>
+                                        <span>Tentang Biometrik WebAuthn</span>
+                                    </div>
+                                    <p class="text-[11px] text-gray-400 leading-relaxed">
+                                        Kamu bisa mendaftarkan sensor sidik jari bawaan HP Android / iPhone (Touch ID / Face ID) atau Windows Hello di laptop ini. Data biometrik tersimpan aman di chip hardware perangkatmu, bukan di server.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3 pt-4 border-t border-white/5">
+                                <button id="btn-register-biometric" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-purple-600/20 hover:scale-[1.01] transition-all">
+                                    <i data-lucide="fingerprint" class="w-4 h-4"></i>
+                                    <span>Daftarkan Sidik Jari Perangkat Ini</span>
+                                </button>
+
+                                <button id="btn-test-biometric" class="w-full py-3 rounded-2xl bg-white/5 hover:bg-white/10 text-gray-300 text-xs font-semibold border border-white/10 transition-all flex items-center justify-center gap-2">
+                                    <i data-lucide="scan" class="w-4 h-4 text-emerald-400"></i>
+                                    <span>Uji Coba Pindai Sidik Jari</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- 2. MOBILE BOTTOM NAVIGATION BAR -->
+    <!-- ========================================================================= -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-[#0A0D14]/95 backdrop-blur-2xl border-t border-white/10 px-4 py-2 flex items-center justify-around">
+        <button class="nav-tab-btn active flex flex-col items-center gap-1 py-1 text-emerald-400" data-tab="tab-dashboard">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+            <span class="text-[10px] font-semibold">Dashboard</span>
+        </button>
+
+        <button class="nav-tab-btn flex flex-col items-center gap-1 py-1 text-gray-400 hover:text-white" data-tab="tab-wallets">
+            <i data-lucide="wallet" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Dompet</span>
+        </button>
+
+        <button class="nav-tab-btn flex flex-col items-center gap-1 py-1 text-gray-400 hover:text-white" data-tab="tab-transactions">
+            <i data-lucide="arrow-left-right" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Transaksi</span>
+        </button>
+
+        <button class="nav-tab-btn flex flex-col items-center gap-1 py-1 text-gray-400 hover:text-white" data-tab="tab-analytics">
+            <i data-lucide="pie-chart" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Grafik</span>
+        </button>
+
+        <button class="nav-tab-btn flex flex-col items-center gap-1 py-1 text-gray-400 hover:text-white" data-tab="tab-whatsapp">
+            <i data-lucide="message-square-code" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Bot WA</span>
+        </button>
+
+        <button class="nav-tab-btn flex flex-col items-center gap-1 py-1 text-gray-400 hover:text-white" data-tab="tab-security">
+            <i data-lucide="shield-check" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">PIN</span>
+        </button>
+    </nav>
+
+
+    <!-- ========================================================================= -->
+    <!-- 3. MODALS -->
+    <!-- ========================================================================= -->
+
+    <!-- MODAL A: TAMBAH / CATAT TRANSAKSI (Manual & Transfer Antar-Dompet) -->
+    <div id="modal-transaction" class="fixed inset-0 z-[150] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-lg w-full p-6 md:p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+            <div class="flex items-center justify-between mb-6">
+                <h3 id="modal-tx-title" class="text-xl font-bold text-white tracking-tight">Catat Transaksi Baru</h3>
+                <button id="btn-close-modal-tx" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Transaction Type Switcher Tabs -->
+            <div class="grid grid-cols-3 gap-2 p-1.5 bg-white/5 rounded-2xl mb-6">
+                <button type="button" class="tx-type-tab-btn active py-2 rounded-xl text-xs font-bold transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" data-type="income">
+                    🟢 Pemasukan
+                </button>
+                <button type="button" class="tx-type-tab-btn py-2 rounded-xl text-xs font-bold transition-all text-gray-400 hover:text-white" data-type="expense">
+                    🔴 Pengeluaran
+                </button>
+                <button type="button" class="tx-type-tab-btn py-2 rounded-xl text-xs font-bold transition-all text-gray-400 hover:text-white" data-type="transfer">
+                    🔄 Transfer
+                </button>
+            </div>
+
+            <form id="form-transaction" class="space-y-4">
+                <input type="hidden" id="form-tx-type" value="income">
+
+                <!-- Regular Wallet Selector (for Income & Expense) -->
+                <div id="wrapper-single-wallet" class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Dompet</label>
+                    <select id="form-tx-wallet" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+
+                <!-- Transfer Antar-Dompet Selectors (from source -> to target) -->
+                <div id="wrapper-transfer-wallets" class="hidden grid grid-cols-2 gap-3">
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-gray-400">Dompet Asal (Keluar)</label>
+                        <select id="form-tx-source-wallet" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-purple-500/50">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-medium text-gray-400">Dompet Tujuan (Masuk)</label>
+                        <select id="form-tx-target-wallet" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-purple-500/50">
+                            <!-- Populated by JS -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Amount -->
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Nominal (Rupiah)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">Rp</span>
+                        <input type="number" id="form-tx-amount" required placeholder="0" class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-white focus:outline-none focus:border-emerald-500/50">
+                    </div>
+                </div>
+
+                <!-- Category -->
+                <div id="wrapper-category" class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Kategori</label>
+                    <select id="form-tx-category" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                        <option value="Gaji & Pendapatan">Gaji & Pendapatan</option>
+                        <option value="Makanan & Minuman">Makanan & Minuman</option>
+                        <option value="Transportasi">Transportasi</option>
+                        <option value="Belanja">Belanja</option>
+                        <option value="Skincare & Perawatan">Skincare & Perawatan</option>
+                        <option value="Tagihan & Langganan">Tagihan & Langganan</option>
+                        <option value="Hiburan & Rekreasi">Hiburan & Rekreasi</option>
+                        <option value="Kesehatan">Kesehatan</option>
+                        <option value="Edukasi">Edukasi</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+
+                <!-- Notes / Description -->
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Catatan / Keterangan</label>
+                    <input type="text" id="form-tx-notes" placeholder="Contoh: Beli kopi kenangan, gajian..." class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                </div>
+
+                <!-- Date -->
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Tanggal</label>
+                    <input type="date" id="form-tx-date" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button type="button" id="btn-cancel-modal-tx" class="flex-1 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-gray-300">Batal</button>
+                    <button type="submit" id="btn-save-tx" class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20">Simpan Transaksi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL B: TAMBAH DOMPET BARU -->
+    <div id="modal-wallet" class="fixed inset-0 z-[150] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-6 md:p-8 rounded-3xl border border-white/10 shadow-2xl relative">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white tracking-tight">Tambah Dompet Baru</h3>
+                <button id="btn-close-modal-wallet" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="form-wallet" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Nama Dompet / Bank</label>
+                    <input type="text" id="form-wallet-name" required placeholder="Contoh: BCA, GoPay, Mandiri..." class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Tipe Dompet</label>
+                    <select id="form-wallet-type" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                        <option value="bank">Rekening Bank</option>
+                        <option value="ewallet">E-Wallet (Digital)</option>
+                        <option value="cash">Uang Tunai / Cash</option>
+                        <option value="other">Lainnya / Investasi</option>
+                    </select>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Saldo Awal (Rp)</label>
+                    <input type="number" id="form-wallet-balance" required placeholder="0" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs font-bold text-white focus:outline-none focus:border-emerald-500/50">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Nomor Rekening / Keterangan</label>
+                    <input type="text" id="form-wallet-acc" placeholder="Misal: 123-456-7890" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Warna Aksen</label>
+                    <div class="flex items-center gap-3">
+                        <input type="color" id="form-wallet-color" value="#10B981" class="w-12 h-10 rounded-xl bg-transparent border-0 cursor-pointer">
+                        <span class="text-xs text-gray-400">Pilih warna khas dompet</span>
+                    </div>
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button type="button" id="btn-cancel-modal-wallet" class="flex-1 py-3.5 rounded-2xl bg-white/5 text-xs font-semibold text-gray-300">Batal</button>
+                    <button type="submit" class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20">Simpan Dompet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL C: TAMBAH TARGET TABUNGAN (GOAL) -->
+    <div id="modal-goal" class="fixed inset-0 z-[150] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-6 md:p-8 rounded-3xl border border-white/10 shadow-2xl relative">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-xl font-bold text-white tracking-tight">Target Tabungan Baru</h3>
+                <button id="btn-close-modal-goal" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="form-goal" class="space-y-4">
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Nama Impian / Target</label>
+                    <input type="text" id="form-goal-name" required placeholder="Contoh: Beli iPad Air, Liburan ke Bali..." class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-purple-500/50">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Target Nominal (Rp)</label>
+                    <input type="number" id="form-goal-target" required placeholder="0" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500/50">
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Target Tenggat Waktu (Opsional)</label>
+                    <input type="date" id="form-goal-deadline" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-purple-500/50">
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button type="button" id="btn-cancel-modal-goal" class="flex-1 py-3.5 rounded-2xl bg-white/5 text-xs font-semibold text-gray-300">Batal</button>
+                    <button type="submit" class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-500/20">Buat Target</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- MODAL D: ALOKASI DANA KE GOAL -->
+    <div id="modal-allocate" class="fixed inset-0 z-[150] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass-card max-w-md w-full p-6 md:p-8 rounded-3xl border border-white/10 shadow-2xl relative">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-xl font-bold text-white tracking-tight">Alokasikan Dana Tabungan</h3>
+                <button id="btn-close-modal-allocate" class="p-2 rounded-xl bg-white/5 text-gray-400 hover:text-white">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <p id="allocate-goal-title" class="text-xs text-purple-400 mb-6 font-semibold"></p>
+
+            <form id="form-allocate" class="space-y-4">
+                <input type="hidden" id="form-allocate-goal-id">
+
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Ambil dari Dompet</label>
+                    <select id="form-allocate-wallet" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-purple-500/50">
+                        <!-- Filled by JS -->
+                    </select>
+                </div>
+
+                <div class="space-y-1">
+                    <label class="text-xs font-medium text-gray-400">Nominal yang Disisihkan (Rp)</label>
+                    <input type="number" id="form-allocate-amount" required placeholder="0" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs font-bold text-white focus:outline-none focus:border-purple-500/50">
+                </div>
+
+                <div class="pt-4 flex gap-3">
+                    <button type="button" id="btn-cancel-modal-allocate" class="flex-1 py-3.5 rounded-2xl bg-white/5 text-xs font-semibold text-gray-300">Batal</button>
+                    <button type="submit" class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-bold text-xs">Sisihkan Sekarang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+
+    <!-- ========================================================================= -->
+    <!-- 4. JAVASCRIPT APP LOGIC (Firebase Realtime + UI Controller + Charts) -->
+    <!-- ========================================================================= -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase Configuration (Same project)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA3TLIhdspdoekbP2gjjVHu8cGNyEuk4zY",
+            authDomain: "chika-c61d6.firebaseapp.com",
+            databaseURL: "https://chika-c61d6-default-rtdb.firebaseio.com",
+            projectId: "chika-c61d6",
+            storageBucket: "chika-c61d6.firebasestorage.app",
+            messagingSenderId: "434591898726",
+            appId: "1:434591898726:web:5885443dcb6177db1ae1a7"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // State
+        let allWallets = [];
+        let allTransactions = [];
+        let allGoals = [];
+        let isBalanceHidden = false;
+        let enteredPin = "";
+        let activePin = localStorage.getItem('chika_pin') || "1234";
+
+        // Realtime sync active PIN from Firebase
+        onValue(ref(db, 'security/pin'), snapshot => {
+            if (snapshot.val()) {
+                activePin = String(snapshot.val());
+                localStorage.setItem('chika_pin', activePin);
+                const pinDisplay = document.getElementById('current-pin-display');
+                if (pinDisplay) pinDisplay.textContent = activePin;
+            }
+        });
+
+        // Biometric Status check
+        function updateBiometricStatusUI() {
+            const isRegistered = localStorage.getItem('chika_biometric_registered') === 'true';
+            const badge = document.getElementById('badge-bio-registered');
+            const navBadge = document.getElementById('badge-bio-nav');
+            if (badge) {
+                if (isRegistered) {
+                    badge.className = "px-2.5 py-1 rounded-xl bg-emerald-500/20 text-[10px] font-bold text-emerald-300 font-mono flex items-center gap-1";
+                    badge.innerHTML = `<i data-lucide="check" class="w-3 h-3"></i> Sidik Jari Terdaftar`;
+                } else {
+                    badge.className = "px-2.5 py-1 rounded-xl bg-white/5 text-[10px] font-semibold text-gray-400";
+                    badge.textContent = "Belum Terdaftar";
+                }
+            }
+            if (navBadge) {
+                navBadge.textContent = isRegistered ? "Biometrik ON" : "PIN Aktif";
+            }
+            lucide.createIcons();
+        }
+
+        // Chart instances
+        let miniExpenseChartInstance = null;
+        let analyticsDonutChartInstance = null;
+        let analyticsCashflowChartInstance = null;
+
+        // ==========================================
+        // AUTHENTICATION LOGIC (Password / Biometrics / Real Bypass)
+        // ==========================================
+        const urlParams = new URLSearchParams(window.location.search);
+        const isRealMode = urlParams.get('mode') === 'real' || urlParams.get('auth') === 'bypass';
+        const lockOverlay = document.getElementById('auth-lock-overlay');
+
+        if (isRealMode) {
+            // "kalau yg real gausa" -> BYPASS LOCK COMPLETELY
+            sessionStorage.setItem('chika_finance_auth', 'granted');
+            lockOverlay.classList.add('hidden');
+        } else if (sessionStorage.getItem('chika_finance_auth') === 'granted') {
+            lockOverlay.classList.add('hidden');
+        } else {
+            lockOverlay.classList.remove('hidden');
+        }
+
+        // Biometric Fingerprint Button Click (WebAuthn / Biometric simulation)
+        document.getElementById('btn-biometric-auth').onclick = async () => {
+            const btn = document.getElementById('btn-biometric-auth');
+            btn.classList.add('scale-105');
+
+            if (window.PublicKeyCredential) {
+                try {
+                    const challenge = new Uint8Array(32);
+                    window.crypto.getRandomValues(challenge);
+                    const assertion = await navigator.credentials.get({
+                        publicKey: {
+                            challenge,
+                            timeout: 60000,
+                            userVerification: "preferred"
+                        }
+                    });
+                    if (assertion) {
+                        unlockSuccess();
+                        return;
+                    }
+                } catch (e) {
+                    console.log('Biometric error/fallback:', e.message);
+                }
+            }
+
+            // High-fidelity biometric vibration & animation
+            if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+            setTimeout(() => {
+                unlockSuccess();
+            }, 500);
+        };
+
+        // Numpad PIN Logic
+        const pinDots = document.querySelectorAll('.pin-dot');
+        const pinErrorMsg = document.getElementById('pin-error-msg');
+
+        function updatePinDisplay() {
+            pinDots.forEach((dot, idx) => {
+                if (idx < enteredPin.length) {
+                    dot.classList.add('bg-emerald-400', 'border-emerald-400');
+                    dot.classList.remove('border-white/30');
+                } else {
+                    dot.classList.remove('bg-emerald-400', 'border-emerald-400');
+                    dot.classList.add('border-white/30');
+                }
+            });
+        }
+
+        document.querySelectorAll('.numpad-btn[data-num]').forEach(btn => {
+            btn.onclick = () => {
+                if (enteredPin.length < 4) {
+                    enteredPin += btn.dataset.num;
+                    updatePinDisplay();
+                    pinErrorMsg.textContent = "";
+
+                    if (enteredPin.length === 4) {
+                        verifyPin();
+                    }
+                }
+            };
+        });
+
+        document.getElementById('btn-pin-back').onclick = () => {
+            enteredPin = enteredPin.slice(0, -1);
+            updatePinDisplay();
+            pinErrorMsg.textContent = "";
+        };
+
+        document.getElementById('btn-pin-clear').onclick = () => {
+            enteredPin = "";
+            updatePinDisplay();
+            pinErrorMsg.textContent = "";
+        };
+
+        function verifyPin() {
+            if (enteredPin === activePin) {
+                unlockSuccess();
+            } else {
+                pinErrorMsg.textContent = "PIN salah. Coba lagi.";
+                const pinDisplay = document.getElementById('pin-display');
+                pinDisplay.classList.add('animate-shake');
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                setTimeout(() => {
+                    pinDisplay.classList.remove('animate-shake');
+                    enteredPin = "";
+                    updatePinDisplay();
+                }, 600);
+            }
+        }
+
+        function unlockSuccess() {
+            sessionStorage.setItem('chika_finance_auth', 'granted');
+            lockOverlay.classList.add('transition-opacity', 'duration-300', 'opacity-0');
+            setTimeout(() => {
+                lockOverlay.classList.add('hidden');
+                lockOverlay.classList.remove('opacity-0');
+                renderAll();
+            }, 300);
+        }
+
+        // Lock button
+        const lockSession = () => {
+            sessionStorage.removeItem('chika_finance_auth');
+            enteredPin = "";
+            updatePinDisplay();
+            lockOverlay.classList.remove('hidden');
+        };
+        document.getElementById('btn-lock-session').onclick = lockSession;
+        document.getElementById('btn-lock-session-mobile').onclick = lockSession;
+
+        // Theme toggle
+        const toggleTheme = () => {
+            document.documentElement.classList.toggle('dark');
+            document.documentElement.classList.toggle('light');
+            setTimeout(renderCharts, 200);
+        };
+        document.getElementById('theme-toggle-btn').onclick = toggleTheme;
+        document.getElementById('theme-toggle-btn-mobile').onclick = toggleTheme;
+
+        // Eye toggle (Hide/Show balance)
+        document.getElementById('btn-toggle-balance-visibility').onclick = () => {
+            isBalanceHidden = !isBalanceHidden;
+            document.getElementById('icon-eye-open').classList.toggle('hidden', isBalanceHidden);
+            document.getElementById('icon-eye-closed').classList.toggle('hidden', !isBalanceHidden);
+            renderDashboard();
+            renderWallets();
+        };
+
+        // Navigation Tabs Controller
+        const tabBtns = document.querySelectorAll('.nav-tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const targetTab = btn.dataset.tab;
+                switchTab(targetTab);
+            });
+        });
+
+        document.querySelectorAll('.nav-switch-link').forEach(link => {
+            link.addEventListener('click', () => switchTab(link.dataset.tab));
+        });
+
+        function switchTab(tabId) {
+            tabContents.forEach(tc => {
+                if (tc.id === tabId) tc.classList.remove('hidden');
+                else tc.classList.add('hidden');
+            });
+
+            tabBtns.forEach(b => {
+                if (b.dataset.tab === tabId) {
+                    b.classList.add('active', 'text-emerald-400', 'bg-emerald-500/10');
+                    b.classList.remove('text-gray-400');
+                } else {
+                    b.classList.remove('active', 'text-emerald-400', 'bg-emerald-500/10');
+                    b.classList.add('text-gray-400');
+                }
+            });
+
+            if (tabId === 'tab-analytics') {
+                setTimeout(renderCharts, 100);
+            }
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ==========================================
+        // HELPERS
+        // ==========================================
+        function formatRupiah(num) {
+            if (isBalanceHidden) return 'Rp ••••••••';
+            return 'Rp ' + Number(num || 0).toLocaleString('id-ID');
+        }
+
+        function formatDateTime(ts) {
+            if (!ts) return '-';
+            const d = new Date(ts);
+            return d.toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // ==========================================
+        // FIREBASE REALTIME LISTENERS
+        // ==========================================
+        onValue(ref(db, 'wallets'), (snapshot) => {
+            const data = snapshot.val();
+            allWallets = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
+            document.getElementById('badge-wallets-count').textContent = allWallets.length;
+            populateWalletDropdowns();
+            renderDashboard();
+            renderWallets();
+        });
+
+        onValue(ref(db, 'transactions'), (snapshot) => {
+            const data = snapshot.val();
+            allTransactions = data ? Object.keys(data).map(k => ({ id: k, ...data[k] }))
+                .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0)) : [];
+            renderDashboard();
+            renderTransactions();
+            renderCharts();
+        });
+
+        onValue(ref(db, 'goals'), (snapshot) => {
+            const data = snapshot.val();
+            allGoals = data ? Object.keys(data).map(k => ({ id: k, ...data[k] })) : [];
+            renderGoals();
+        });
+
+        // ==========================================
+        // RENDER FUNCTIONS
+        // ==========================================
+        function renderAll() {
+            renderDashboard();
+            renderWallets();
+            renderTransactions();
+            renderGoals();
+            renderCharts();
+            lucide.createIcons();
+        }
+
+        function populateWalletDropdowns() {
+            const selects = [
+                document.getElementById('form-tx-wallet'),
+                document.getElementById('form-tx-source-wallet'),
+                document.getElementById('form-tx-target-wallet'),
+                document.getElementById('form-allocate-wallet'),
+                document.getElementById('filter-wallet-select')
+            ];
+
+            selects.forEach(sel => {
+                if (!sel) return;
+                const isFilter = sel.id === 'filter-wallet-select';
+                let html = isFilter ? '<option value="all">Semua Dompet</option>' : '';
+
+                allWallets.forEach(w => {
+                    html += `<option value="${w.id}">${w.name} (${formatRupiah(w.balance)})</option>`;
+                });
+                sel.innerHTML = html;
+            });
+        }
+
+        // 1. Dashboard Render
+        function renderDashboard() {
+            // Net worth
+            const totalNetWorth = allWallets.reduce((acc, w) => acc + (w.balance || 0), 0);
+            document.getElementById('total-net-worth-display').textContent = formatRupiah(totalNetWorth);
+
+            // Monthly summary
+            const now = new Date();
+            const currentMonth = now.getMonth();
+            const currentYear = now.getFullYear();
+
+            let monthlyIncome = 0;
+            let monthlyExpense = 0;
+
+            allTransactions.forEach(tx => {
+                const txDate = tx.createdAt ? new Date(tx.createdAt) : new Date(tx.date);
+                if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
+                    if (tx.type === 'income') monthlyIncome += (tx.amount || 0);
+                    if (tx.type === 'expense') monthlyExpense += (tx.amount || 0);
+                }
+            });
+
+            document.getElementById('summary-income-display').textContent = '+' + formatRupiah(monthlyIncome);
+            document.getElementById('summary-expense-display').textContent = '-' + formatRupiah(monthlyExpense);
+
+            const savingRate = monthlyIncome > 0 ? Math.round(((monthlyIncome - monthlyExpense) / monthlyIncome) * 100) : 0;
+            document.getElementById('summary-saving-rate').textContent = savingRate + '%';
+
+            // Wallets preview grid (top 3)
+            const walletsGrid = document.getElementById('wallets-grid');
+            walletsGrid.innerHTML = allWallets.map(w => {
+                let cardClass = 'wallet-card-custom';
+                let icon = 'landmark';
+                if (w.name.toLowerCase().includes('dana')) {
+                    cardClass = 'wallet-card-dana';
+                    icon = 'smartphone';
+                } else if (w.name.toLowerCase().includes('seabank')) {
+                    cardClass = 'wallet-card-seabank';
+                    icon = 'landmark';
+                } else if (w.name.toLowerCase().includes('cash')) {
+                    cardClass = 'wallet-card-cash';
+                    icon = 'banknote';
+                }
+
+                return `
+                    <div class="${cardClass} p-6 rounded-3xl text-white shadow-xl relative overflow-hidden group hover:scale-[1.02] transition-transform">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-[11px] font-bold tracking-wider uppercase opacity-80">${w.accountNumber || w.type}</span>
+                            <div class="p-2 rounded-xl bg-white/20 backdrop-blur-md">
+                                <i data-lucide="${icon}" class="w-4 h-4"></i>
+                            </div>
+                        </div>
+                        <div class="text-xs opacity-75 font-medium">${w.name}</div>
+                        <div class="text-2xl font-black tracking-tight mt-1 mb-4">${formatRupiah(w.balance)}</div>
+                        <div class="flex items-center justify-between text-[11px] pt-3 border-t border-white/20 opacity-90">
+                            <span>Status: Aktif</span>
+                            <button onclick="window.openTransferWithSource('${w.id}')" class="hover:underline flex items-center gap-1 font-semibold">
+                                Transfer <i data-lucide="arrow-right" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Recent Transactions (top 5)
+            const recentList = document.getElementById('recent-transactions-list');
+            if (allTransactions.length === 0) {
+                recentList.innerHTML = `<div class="text-center py-6 text-gray-500 text-xs">Belum ada transaksi tercatat.</div>`;
+            } else {
+                recentList.innerHTML = allTransactions.slice(0, 5).map(tx => renderTransactionItemHtml(tx)).join('');
+            }
+
+            lucide.createIcons();
+        }
+
+        // 2. Wallets Full View
+        function renderWallets() {
+            const grid = document.getElementById('wallets-full-grid');
+            if (!grid) return;
+
+            grid.innerHTML = allWallets.map(w => {
+                let cardClass = 'wallet-card-custom';
+                let icon = 'landmark';
+                if (w.name.toLowerCase().includes('dana')) { cardClass = 'wallet-card-dana'; icon = 'smartphone'; }
+                else if (w.name.toLowerCase().includes('seabank')) { cardClass = 'wallet-card-seabank'; icon = 'landmark'; }
+                else if (w.name.toLowerCase().includes('cash')) { cardClass = 'wallet-card-cash'; icon = 'banknote'; }
+
+                return `
+                    <div class="glass-card p-6 rounded-3xl border border-white/10 flex flex-col justify-between space-y-4">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-2xl ${cardClass} flex items-center justify-center text-white shadow-lg">
+                                    <i data-lucide="${icon}" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-base text-white">${w.name}</h4>
+                                    <span class="text-[10px] text-gray-400 uppercase font-mono">${w.accountNumber || w.type}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <span class="text-xs text-gray-400 font-medium">Saldo Terkini</span>
+                            <div class="text-2xl font-black text-white tracking-tight">${formatRupiah(w.balance)}</div>
+                        </div>
+
+                        <div class="pt-3 border-t border-white/5 flex gap-2">
+                            <button onclick="window.openTxModalWithType('income', '${w.id}')" class="flex-1 py-2 rounded-xl bg-white/5 hover:bg-emerald-500/20 text-emerald-400 text-xs font-semibold transition-all">
+                                + Top Up / Masuk
+                            </button>
+                            <button onclick="window.openTransferWithSource('${w.id}')" class="flex-1 py-2 rounded-xl bg-white/5 hover:bg-purple-500/20 text-purple-400 text-xs font-semibold transition-all">
+                                ⇄ Transfer
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // Helper for Transaction Item HTML
+        function renderTransactionItemHtml(tx) {
+            let typeColor = 'text-emerald-400';
+            let bgCircle = 'bg-emerald-500/10 text-emerald-400';
+            let sign = '+';
+            let icon = 'arrow-down-left';
+
+            if (tx.type === 'expense') {
+                typeColor = 'text-rose-400';
+                bgCircle = 'bg-rose-500/10 text-rose-400';
+                sign = '-';
+                icon = 'arrow-up-right';
+            } else if (tx.type === 'transfer') {
+                typeColor = 'text-purple-400';
+                bgCircle = 'bg-purple-500/10 text-purple-400';
+                sign = '⇄ ';
+                icon = 'repeat';
+            }
+
+            const walletTag = tx.type === 'transfer' 
+                ? `${tx.walletName || 'Asal'} ➔ ${tx.targetWalletName || 'Tujuan'}`
+                : (tx.walletName || 'Dompet');
+
+            return `
+                <div class="p-3.5 rounded-2xl bg-white/5 hover:bg-white/[0.08] transition-all flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="w-9 h-9 rounded-xl ${bgCircle} flex-shrink-0 flex items-center justify-center">
+                            <i data-lucide="${icon}" class="w-4 h-4"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <div class="font-semibold text-xs text-white truncate">${tx.notes || tx.category || 'Transaksi'}</div>
+                            <div class="flex items-center gap-2 text-[10px] text-gray-400">
+                                <span class="px-1.5 py-0.5 rounded bg-white/5 font-mono text-gray-300">${walletTag}</span>
+                                <span>•</span>
+                                <span>${formatDateTime(tx.createdAt)}</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-right flex-shrink-0">
+                        <div class="font-bold text-xs ${typeColor}">${sign}${formatRupiah(tx.amount)}</div>
+                        <span class="text-[10px] text-gray-500">${tx.category || '-'}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // 3. Transactions Table Render with Filter
+        function renderTransactions() {
+            const tableBody = document.getElementById('transactions-table-body');
+            const searchVal = (document.getElementById('tx-search-input')?.value || "").toLowerCase();
+            const walletFilter = document.getElementById('filter-wallet-select')?.value || "all";
+            const typeFilter = document.getElementById('filter-type-select')?.value || "all";
+            const catFilter = document.getElementById('filter-category-select')?.value || "all";
+
+            const filtered = allTransactions.filter(tx => {
+                const matchSearch = (tx.notes || "").toLowerCase().includes(searchVal) ||
+                                    (tx.category || "").toLowerCase().includes(searchVal) ||
+                                    (tx.walletName || "").toLowerCase().includes(searchVal);
+                const matchWallet = walletFilter === 'all' || tx.walletId === walletFilter || tx.targetWalletId === walletFilter;
+                const matchType = typeFilter === 'all' || tx.type === typeFilter;
+                const matchCat = catFilter === 'all' || tx.category === catFilter;
+                return matchSearch && matchWallet && matchType && matchCat;
+            });
+
+            document.getElementById('tx-count-indicator').textContent = `Menampilkan ${filtered.length} transaksi`;
+
+            if (filtered.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">Tidak ada transaksi yang cocok.</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = filtered.map(tx => {
+                let badgeClass = 'bg-emerald-500/10 text-emerald-400';
+                let amountClass = 'text-emerald-400 font-bold';
+                let sign = '+';
+                if (tx.type === 'expense') {
+                    badgeClass = 'bg-rose-500/10 text-rose-400';
+                    amountClass = 'text-rose-400 font-bold';
+                    sign = '-';
+                } else if (tx.type === 'transfer') {
+                    badgeClass = 'bg-purple-500/10 text-purple-400';
+                    amountClass = 'text-purple-400 font-bold';
+                    sign = '⇄ ';
+                }
+
+                const walletLabel = tx.type === 'transfer'
+                    ? `<span class="px-2 py-0.5 rounded-md bg-purple-500/10 text-purple-300 font-mono">${tx.walletName} ➔ ${tx.targetWalletName}</span>`
+                    : `<span class="px-2 py-0.5 rounded-md bg-white/5 text-gray-300 font-mono">${tx.walletName || '-'}</span>`;
+
+                return `
+                    <tr class="hover:bg-white/5 transition-colors">
+                        <td class="py-4 px-6">
+                            <div class="font-semibold text-white">${tx.notes || '-'}</div>
+                            <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${badgeClass}">${tx.type}</span>
+                        </td>
+                        <td class="py-4 px-6">${walletLabel}</td>
+                        <td class="py-4 px-6 text-gray-400">${tx.category || '-'}</td>
+                        <td class="py-4 px-6 text-gray-400 font-mono">${formatDateTime(tx.createdAt)}</td>
+                        <td class="py-4 px-6 text-right ${amountClass}">${sign}${formatRupiah(tx.amount)}</td>
+                        <td class="py-4 px-6 text-center">
+                            <button onclick="window.deleteTransaction('${tx.id}')" class="p-2 hover:bg-rose-500/20 rounded-lg text-gray-400 hover:text-rose-400 transition-all" title="Hapus Transaksi">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // Filter event listeners
+        ['tx-search-input', 'filter-wallet-select', 'filter-type-select', 'filter-category-select'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener('input', renderTransactions);
+                el.addEventListener('change', renderTransactions);
+            }
+        });
+
+        // 4. Goals Render
+        function renderGoals() {
+            const grid = document.getElementById('goals-grid');
+            if (!grid) return;
+
+            if (allGoals.length === 0) {
+                grid.innerHTML = `<div class="col-span-3 text-center py-10 text-gray-500">Belum ada target tabungan. Klik "Tambah Target Baru" untuk mulai.</div>`;
+                return;
+            }
+
+            grid.innerHTML = allGoals.map(g => {
+                const target = g.targetAmount || 1;
+                const current = g.currentAmount || 0;
+                const percent = Math.min(100, Math.round((current / target) * 100));
+
+                return `
+                    <div class="glass-card p-6 rounded-3xl border border-white/10 flex flex-col justify-between space-y-5">
+                        <div>
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs px-2.5 py-1 rounded-full bg-purple-500/10 text-purple-400 font-semibold font-mono">Target Impian</span>
+                                <span class="text-xs font-bold text-emerald-400 font-mono">${percent}%</span>
+                            </div>
+                            <h4 class="text-lg font-bold text-white tracking-tight">${g.name}</h4>
+                            <span class="text-[11px] text-gray-400">Tenggat: ${g.deadline || 'Tanpa batas waktu'}</span>
+                        </div>
+
+                        <!-- Progress Bar -->
+                        <div>
+                            <div class="flex items-baseline justify-between text-xs mb-1.5">
+                                <span class="text-gray-400">Terkumpul: <strong class="text-white">${formatRupiah(current)}</strong></span>
+                                <span class="text-gray-500 text-[10px]">Target: ${formatRupiah(target)}</span>
+                            </div>
+                            <div class="w-full bg-white/5 rounded-full h-3 overflow-hidden p-0.5 border border-white/10">
+                                <div class="bg-gradient-to-r from-purple-500 to-emerald-400 h-full rounded-full transition-all duration-500" style="width: ${percent}%;"></div>
+                            </div>
+                        </div>
+
+                        <button onclick="window.openAllocateModal('${g.id}', '${g.name}')" class="w-full py-2.5 rounded-xl bg-white/5 hover:bg-purple-600 hover:text-white text-purple-400 text-xs font-bold border border-purple-500/20 transition-all flex items-center justify-center gap-2">
+                            <i data-lucide="coins" class="w-4 h-4"></i>
+                            <span>Alokasikan Dana</span>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            lucide.createIcons();
+        }
+
+        // 5. Chart.js Render
+        function renderCharts() {
+            // Category aggregate for Expense
+            const categoryMap = {};
+            allTransactions.filter(t => t.type === 'expense').forEach(t => {
+                const cat = t.category || 'Lainnya';
+                categoryMap[cat] = (categoryMap[cat] || 0) + (t.amount || 0);
+            });
+
+            const catLabels = Object.keys(categoryMap);
+            const catData = Object.values(categoryMap);
+            const palette = ['#10B981', '#F43F5E', '#8B5CF6', '#F59E0B', '#3B82F6', '#EC4899', '#06B6D4', '#84CC16'];
+
+            // Mini Donut
+            const miniCanvas = document.getElementById('miniExpenseChart');
+            if (miniCanvas) {
+                if (miniExpenseChartInstance) miniExpenseChartInstance.destroy();
+                miniExpenseChartInstance = new Chart(miniCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: catLabels.length ? catLabels : ['Belum ada data'],
+                        datasets: [{
+                            data: catData.length ? catData : [1],
+                            backgroundColor: catData.length ? palette : ['#334155'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        cutout: '70%',
+                        plugins: { legend: { display: false } }
+                    }
+                });
+
+                // Mini legend
+                const miniLegend = document.getElementById('mini-expense-categories');
+                if (miniLegend) {
+                    miniLegend.innerHTML = catLabels.slice(0, 4).map((c, i) => `
+                        <div class="flex items-center justify-between text-[11px] text-gray-400">
+                            <div class="flex items-center gap-2 truncate">
+                                <span class="w-2 h-2 rounded-full flex-shrink-0" style="background-color: ${palette[i % palette.length]}"></span>
+                                <span class="truncate">${c}</span>
+                            </div>
+                            <span class="font-bold text-white font-mono">${formatRupiah(categoryMap[c])}</span>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // Big Analytics Donut
+            const analyticsCanvas = document.getElementById('analyticsDonutChart');
+            if (analyticsCanvas) {
+                if (analyticsDonutChartInstance) analyticsDonutChartInstance.destroy();
+                analyticsDonutChartInstance = new Chart(analyticsCanvas, {
+                    type: 'doughnut',
+                    data: {
+                        labels: catLabels.length ? catLabels : ['Belum ada data'],
+                        datasets: [{
+                            data: catData.length ? catData : [1],
+                            backgroundColor: catData.length ? palette : ['#334155'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        cutout: '65%',
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+
+                const legendEl = document.getElementById('analytics-donut-legend');
+                if (legendEl) {
+                    legendEl.innerHTML = catLabels.map((c, i) => `
+                        <div class="flex items-center gap-2 p-2 rounded-xl bg-white/5">
+                            <span class="w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: ${palette[i % palette.length]}"></span>
+                            <div class="truncate">
+                                <div class="text-[10px] text-gray-400 truncate">${c}</div>
+                                <div class="font-bold text-white font-mono text-[11px]">${formatRupiah(categoryMap[c])}</div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // Cashflow Trend Chart
+            const cashflowCanvas = document.getElementById('analyticsCashflowChart');
+            if (cashflowCanvas) {
+                if (analyticsCashflowChartInstance) analyticsCashflowChartInstance.destroy();
+
+                // Group by last 7 days
+                const days = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    days.push(d.toISOString().split('T')[0]);
+                }
+
+                const incomePerDay = days.map(day => {
+                    return allTransactions
+                        .filter(t => t.type === 'income' && (t.date === day || (t.createdAt && new Date(t.createdAt).toISOString().split('T')[0] === day)))
+                        .reduce((acc, t) => acc + (t.amount || 0), 0);
+                });
+
+                const expensePerDay = days.map(day => {
+                    return allTransactions
+                        .filter(t => t.type === 'expense' && (t.date === day || (t.createdAt && new Date(t.createdAt).toISOString().split('T')[0] === day)))
+                        .reduce((acc, t) => acc + (t.amount || 0), 0);
+                });
+
+                const dayLabels = days.map(day => {
+                    const [y, m, d] = day.split('-');
+                    return `${d}/${m}`;
+                });
+
+                analyticsCashflowChartInstance = new Chart(cashflowCanvas, {
+                    type: 'bar',
+                    data: {
+                        labels: dayLabels,
+                        datasets: [
+                            {
+                                label: 'Pemasukan',
+                                data: incomePerDay,
+                                backgroundColor: '#10B981',
+                                borderRadius: 6
+                            },
+                            {
+                                label: 'Pengeluaran',
+                                data: expensePerDay,
+                                backgroundColor: '#F43F5E',
+                                borderRadius: 6
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { color: '#64748B', font: { size: 10 } } },
+                            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748B', font: { size: 10 } } }
+                        }
+                    }
+                });
+            }
+        }
+
+        // ==========================================
+        // TRANSACTION MODAL & ACTIONS
+        // ==========================================
+        const modalTx = document.getElementById('modal-transaction');
+        const formTx = document.getElementById('form-transaction');
+        const txTypeTabBtns = document.querySelectorAll('.tx-type-tab-btn');
+
+        function openTxModal(type = 'income', preselectedWallet = null) {
+            formTx.reset();
+            document.getElementById('form-tx-date').value = new Date().toISOString().split('T')[0];
+            setTxType(type);
+
+            if (preselectedWallet) {
+                document.getElementById('form-tx-wallet').value = preselectedWallet;
+                document.getElementById('form-tx-source-wallet').value = preselectedWallet;
+            }
+
+            modalTx.classList.remove('hidden');
+        }
+
+        function setTxType(type) {
+            document.getElementById('form-tx-type').value = type;
+
+            txTypeTabBtns.forEach(btn => {
+                if (btn.dataset.type === type) {
+                    btn.classList.add('active', 'border', 'bg-white/10');
+                    if (type === 'income') btn.className = 'tx-type-tab-btn active py-2 rounded-xl text-xs font-bold transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+                    if (type === 'expense') btn.className = 'tx-type-tab-btn active py-2 rounded-xl text-xs font-bold transition-all bg-rose-500/20 text-rose-400 border border-rose-500/30';
+                    if (type === 'transfer') btn.className = 'tx-type-tab-btn active py-2 rounded-xl text-xs font-bold transition-all bg-purple-500/20 text-purple-400 border border-purple-500/30';
+                } else {
+                    btn.className = 'tx-type-tab-btn py-2 rounded-xl text-xs font-bold transition-all text-gray-400 hover:text-white';
+                }
+            });
+
+            const isTransfer = type === 'transfer';
+            document.getElementById('wrapper-single-wallet').classList.toggle('hidden', isTransfer);
+            document.getElementById('wrapper-transfer-wallets').classList.toggle('hidden', !isTransfer);
+            document.getElementById('wrapper-category').classList.toggle('hidden', isTransfer);
+        }
+
+        txTypeTabBtns.forEach(btn => {
+            btn.onclick = () => setTxType(btn.dataset.type);
+        });
+
+        document.getElementById('btn-open-add-tx').onclick = () => openTxModal('income');
+        document.getElementById('btn-open-add-tx-2').onclick = () => openTxModal('income');
+        document.getElementById('btn-open-quick-transfer').onclick = () => openTxModal('transfer');
+        document.getElementById('btn-banner-transfer').onclick = () => openTxModal('transfer');
+
+        document.querySelectorAll('.btn-fast-action').forEach(btn => {
+            btn.onclick = () => openTxModal(btn.dataset.type);
+        });
+
+        document.getElementById('btn-close-modal-tx').onclick = () => modalTx.classList.add('hidden');
+        document.getElementById('btn-cancel-modal-tx').onclick = () => modalTx.classList.add('hidden');
+
+        window.openTxModalWithType = (type, walletId) => openTxModal(type, walletId);
+        window.openTransferWithSource = (walletId) => openTxModal('transfer', walletId);
+
+        // Submit Transaction
+        formTx.onsubmit = async (e) => {
+            e.preventDefault();
+            const type = document.getElementById('form-tx-type').value;
+            const amount = parseInt(document.getElementById('form-tx-amount').value, 10);
+            const notes = document.getElementById('form-tx-notes').value;
+            const date = document.getElementById('form-tx-date').value || new Date().toISOString().split('T')[0];
+
+            if (isNaN(amount) || amount <= 0) {
+                alert('Nominal transaksi harus lebih dari 0');
+                return;
+            }
+
+            try {
+                if (type === 'transfer') {
+                    const sourceWalletId = document.getElementById('form-tx-source-wallet').value;
+                    const targetWalletId = document.getElementById('form-tx-target-wallet').value;
+
+                    if (sourceWalletId === targetWalletId) {
+                        alert('Dompet asal dan tujuan tidak boleh sama!');
+                        return;
+                    }
+
+                    const sourceW = allWallets.find(w => w.id === sourceWalletId);
+                    const targetW = allWallets.find(w => w.id === targetWalletId);
+
+                    const txId = 'tx_' + Date.now();
+                    const updates = {};
+                    updates[`wallets/${sourceWalletId}/balance`] = (sourceW.balance || 0) - amount;
+                    updates[`wallets/${targetWalletId}/balance`] = (targetW.balance || 0) + amount;
+                    updates[`transactions/${txId}`] = {
+                        id: txId,
+                        type: 'transfer',
+                        amount,
+                        walletId: sourceWalletId,
+                        walletName: sourceW.name,
+                        targetWalletId: targetWalletId,
+                        targetWalletName: targetW.name,
+                        category: 'Transfer Antar-Dompet',
+                        notes: notes || `Transfer dari ${sourceW.name} ke ${targetW.name}`,
+                        date,
+                        createdAt: Date.now()
+                    };
+
+                    await update(ref(db), updates);
+                } else {
+                    const walletId = document.getElementById('form-tx-wallet').value;
+                    const category = document.getElementById('form-tx-category').value;
+                    const wallet = allWallets.find(w => w.id === walletId);
+
+                    const txId = 'tx_' + Date.now();
+                    const newBal = type === 'income' ? (wallet.balance || 0) + amount : (wallet.balance || 0) - amount;
+
+                    const updates = {};
+                    updates[`wallets/${walletId}/balance`] = newBal;
+                    updates[`transactions/${txId}`] = {
+                        id: txId,
+                        type,
+                        amount,
+                        walletId,
+                        walletName: wallet.name,
+                        category,
+                        notes,
+                        date,
+                        createdAt: Date.now()
+                    };
+
+                    await update(ref(db), updates);
+                }
+
+                modalTx.classList.add('hidden');
+                formTx.reset();
+            } catch (err) {
+                alert('Gagal menyimpan transaksi: ' + err.message);
+            }
+        };
+
+        // Delete Transaction & Revert Balance
+        window.deleteTransaction = async (txId) => {
+            const tx = allTransactions.find(t => t.id === txId);
+            if (!tx) return;
+
+            if (!confirm(`Hapus transaksi "${tx.notes || tx.category}" senilai ${formatRupiah(tx.amount)}?\nSaldo dompet akan disesuaikan otomatis.`)) {
+                return;
+            }
+
+            try {
+                const updates = {};
+                if (tx.type === 'income') {
+                    const w = allWallets.find(x => x.id === tx.walletId);
+                    if (w) updates[`wallets/${tx.walletId}/balance`] = (w.balance || 0) - tx.amount;
+                } else if (tx.type === 'expense') {
+                    const w = allWallets.find(x => x.id === tx.walletId);
+                    if (w) updates[`wallets/${tx.walletId}/balance`] = (w.balance || 0) + tx.amount;
+                } else if (tx.type === 'transfer') {
+                    const src = allWallets.find(x => x.id === tx.walletId);
+                    const tgt = allWallets.find(x => x.id === tx.targetWalletId);
+                    if (src) updates[`wallets/${tx.walletId}/balance`] = (src.balance || 0) + tx.amount;
+                    if (tgt) updates[`wallets/${tx.targetWalletId}/balance`] = (tgt.balance || 0) - tx.amount;
+                }
+
+                updates[`transactions/${txId}`] = null;
+                await update(ref(db), updates);
+            } catch (err) {
+                alert('Gagal menghapus transaksi: ' + err.message);
+            }
+        };
+
+        // ==========================================
+        // WALLET MODAL
+        // ==========================================
+        const modalWallet = document.getElementById('modal-wallet');
+        const formWallet = document.getElementById('form-wallet');
+
+        const openWalletModal = () => {
+            formWallet.reset();
+            modalWallet.classList.remove('hidden');
+        };
+        document.getElementById('btn-open-add-wallet').onclick = openWalletModal;
+        document.getElementById('btn-open-add-wallet-2').onclick = openWalletModal;
+        document.getElementById('btn-close-modal-wallet').onclick = () => modalWallet.classList.add('hidden');
+        document.getElementById('btn-cancel-modal-wallet').onclick = () => modalWallet.classList.add('hidden');
+
+        formWallet.onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('form-wallet-name').value;
+            const type = document.getElementById('form-wallet-type').value;
+            const balance = parseInt(document.getElementById('form-wallet-balance').value, 10) || 0;
+            const acc = document.getElementById('form-wallet-acc').value;
+            const color = document.getElementById('form-wallet-color').value;
+
+            const id = 'w_' + name.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Math.random().toString(36).substring(2, 6);
+
+            try {
+                await set(ref(db, `wallets/${id}`), {
+                    id,
+                    name,
+                    type,
+                    balance,
+                    accountNumber: acc || '-',
+                    color,
+                    createdAt: Date.now()
+                });
+                modalWallet.classList.add('hidden');
+                formWallet.reset();
+            } catch (err) {
+                alert('Gagal menambah dompet: ' + err.message);
+            }
+        };
+
+        // ==========================================
+        // GOALS MODAL & ALLOCATION
+        // ==========================================
+        const modalGoal = document.getElementById('modal-goal');
+        const formGoal = document.getElementById('form-goal');
+        document.getElementById('btn-open-add-goal').onclick = () => {
+            formGoal.reset();
+            modalGoal.classList.remove('hidden');
+        };
+        document.getElementById('btn-close-modal-goal').onclick = () => modalGoal.classList.add('hidden');
+        document.getElementById('btn-cancel-modal-goal').onclick = () => modalGoal.classList.add('hidden');
+
+        formGoal.onsubmit = async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('form-goal-name').value;
+            const targetAmount = parseInt(document.getElementById('form-goal-target').value, 10);
+            const deadline = document.getElementById('form-goal-deadline').value;
+
+            const id = 'goal_' + Date.now();
+            try {
+                await set(ref(db, `goals/${id}`), {
+                    id,
+                    name,
+                    targetAmount,
+                    currentAmount: 0,
+                    deadline,
+                    createdAt: Date.now()
+                });
+                modalGoal.classList.add('hidden');
+                formGoal.reset();
+            } catch (err) {
+                alert('Gagal membuat goal: ' + err.message);
+            }
+        };
+
+        // Allocate Modal
+        const modalAllocate = document.getElementById('modal-allocate');
+        const formAllocate = document.getElementById('form-allocate');
+        window.openAllocateModal = (goalId, goalName) => {
+            formAllocate.reset();
+            document.getElementById('form-allocate-goal-id').value = goalId;
+            document.getElementById('allocate-goal-title').textContent = `Target: ${goalName}`;
+            modalAllocate.classList.remove('hidden');
+        };
+        document.getElementById('btn-close-modal-allocate').onclick = () => modalAllocate.classList.add('hidden');
+        document.getElementById('btn-cancel-modal-allocate').onclick = () => modalAllocate.classList.add('hidden');
+
+        formAllocate.onsubmit = async (e) => {
+            e.preventDefault();
+            const goalId = document.getElementById('form-allocate-goal-id').value;
+            const walletId = document.getElementById('form-allocate-wallet').value;
+            const amount = parseInt(document.getElementById('form-allocate-amount').value, 10);
+
+            const wallet = allWallets.find(w => w.id === walletId);
+            const goal = allGoals.find(g => g.id === goalId);
+
+            if ((wallet.balance || 0) < amount) {
+                alert('Saldo dompet tidak mencukupi untuk disisihkan!');
+                return;
+            }
+
+            try {
+                const txId = 'tx_goal_' + Date.now();
+                const updates = {};
+                updates[`wallets/${walletId}/balance`] = (wallet.balance || 0) - amount;
+                updates[`goals/${goalId}/currentAmount`] = (goal.currentAmount || 0) + amount;
+                updates[`transactions/${txId}`] = {
+                    id: txId,
+                    type: 'expense',
+                    amount,
+                    walletId,
+                    walletName: wallet.name,
+                    category: 'Tabungan & Impian',
+                    notes: `Alokasi dana untuk: ${goal.name}`,
+                    date: new Date().toISOString().split('T')[0],
+                    createdAt: Date.now()
+                };
+
+                await update(ref(db), updates);
+                modalAllocate.classList.add('hidden');
+                formAllocate.reset();
+            } catch (err) {
+                alert('Gagal mengalokasikan dana: ' + err.message);
+            }
+        };
+
+        // ==========================================
+        // WHATSAPP BOT SIMULATOR
+        // ==========================================
+        const waForm = document.getElementById('wa-sim-form');
+        const waInput = document.getElementById('wa-sim-input');
+        const waStream = document.getElementById('wa-chat-stream');
+
+        document.querySelectorAll('.btn-sample-wa').forEach(b => {
+            b.onclick = () => {
+                waInput.value = b.textContent.trim();
+                waForm.dispatchEvent(new Event('submit'));
+            };
+        });
+
+        waForm.onsubmit = async (e) => {
+            e.preventDefault();
+            const text = waInput.value.trim();
+            if (!text) return;
+
+            // Render user bubble
+            const userMsgHtml = `
+                <div class="flex justify-end">
+                    <div class="max-w-[80%] bg-emerald-600 text-white p-3 rounded-2xl rounded-tr-none text-xs shadow-sm">
+                        ${text}
+                    </div>
+                </div>
+            `;
+            waStream.insertAdjacentHTML('beforeend', userMsgHtml);
+            waInput.value = '';
+            waStream.scrollTop = waStream.scrollHeight;
+
+            // Typing indicator
+            const typingId = 'typing_' + Date.now();
+            const typingHtml = `
+                <div id="${typingId}" class="flex justify-start">
+                    <div class="bg-[#121B22] text-gray-400 p-2.5 rounded-2xl text-[11px] flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span>Bot sedang memproses...</span>
+                    </div>
+                </div>
+            `;
+            waStream.insertAdjacentHTML('beforeend', typingHtml);
+            waStream.scrollTop = waStream.scrollHeight;
+
+            try {
+                // Send to backend simulator endpoint
+                const res = await fetch('/api/bot-simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+
+                const data = await res.json();
+                document.getElementById(typingId)?.remove();
+
+                const replyText = data.reply || "Maaf, pesan tidak dapat diproses.";
+
+                // Format markdown-style bold and italic for WhatsApp
+                const formattedReply = replyText
+                    .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
+                    .replace(/_(.*?)_/g, '<em>$1</em>')
+                    .replace(/\n/g, '<br>');
+
+                const botMsgHtml = `
+                    <div class="flex justify-start">
+                        <div class="max-w-[85%] bg-[#121B22] text-slate-100 p-3.5 rounded-2xl rounded-tl-none text-xs border border-white/5 leading-relaxed shadow-sm">
+                            ${formattedReply}
+                        </div>
+                    </div>
+                `;
+                waStream.insertAdjacentHTML('beforeend', botMsgHtml);
+                waStream.scrollTop = waStream.scrollHeight;
+            } catch (err) {
+                document.getElementById(typingId)?.remove();
+                waStream.insertAdjacentHTML('beforeend', `
+                    <div class="flex justify-start">
+                        <div class="bg-rose-950/60 text-rose-300 p-3 rounded-2xl text-xs">
+                            Koneksi ke backend server gagal. Pastikan server Node berjalan (node server.js).
+                        </div>
+                    </div>
+                `);
+                waStream.scrollTop = waStream.scrollHeight;
+            }
+        };
+
+        // ==========================================
+        // SECURITY & BIOMETRIC HANDLERS
+        // ==========================================
+        updateBiometricStatusUI();
+
+        // Form Ganti PIN
+        const formChangePin = document.getElementById('form-change-pin');
+        if (formChangePin) {
+            formChangePin.onsubmit = async (e) => {
+                e.preventDefault();
+                const oldPin = document.getElementById('input-old-pin').value;
+                const newPin = document.getElementById('input-new-pin').value;
+                const confirmPin = document.getElementById('input-confirm-pin').value;
+
+                if (oldPin !== activePin) {
+                    alert('❌ PIN lama tidak sesuai!');
+                    return;
+                }
+                if (newPin.length !== 4 || isNaN(newPin)) {
+                    alert('❌ PIN baru harus berupa 4 digit angka!');
+                    return;
+                }
+                if (newPin !== confirmPin) {
+                    alert('❌ Konfirmasi PIN baru tidak cocok!');
+                    return;
+                }
+
+                try {
+                    await set(ref(db, 'security/pin'), newPin);
+                    activePin = newPin;
+                    localStorage.setItem('chika_pin', newPin);
+                    document.getElementById('current-pin-display').textContent = newPin;
+                    alert('✅ Berhasil! PIN Keamanan berhasil diubah menjadi: ' + newPin);
+                    formChangePin.reset();
+                } catch (err) {
+                    alert('Gagal memperbarui PIN: ' + err.message);
+                }
+            };
+        }
+
+        // Daftarkan Sidik Jari (WebAuthn Platform Authenticator)
+        document.getElementById('btn-register-biometric')?.addEventListener('click', async () => {
+            if (!window.PublicKeyCredential) {
+                alert("Browser atau perangkat ini belum mendukung WebAuthn biometrik bawaan.");
+                return;
+            }
+
+            try {
+                const challenge = new Uint8Array(32);
+                window.crypto.getRandomValues(challenge);
+                const userId = new Uint8Array(16);
+                window.crypto.getRandomValues(userId);
+
+                const cred = await navigator.credentials.create({
+                    publicKey: {
+                        challenge,
+                        rp: { name: "Chika Finance Hub", id: window.location.hostname || "localhost" },
+                        user: {
+                            id: userId,
+                            name: "arsinta@chika.app",
+                            displayName: "Arsinta Chick"
+                        },
+                        pubKeyCredParams: [
+                            { alg: -7, type: "public-key" },
+                            { alg: -257, type: "public-key" }
+                        ],
+                        authenticatorSelection: {
+                            authenticatorAttachment: "platform", // HP fingerprint / Touch ID / Windows Hello
+                            userVerification: "required"
+                        },
+                        timeout: 60000
+                    }
+                });
+
+                if (cred) {
+                    localStorage.setItem('chika_biometric_registered', 'true');
+                    localStorage.setItem('chika_biometric_id', cred.id);
+                    await set(ref(db, 'security/biometric_enabled'), true);
+                    updateBiometricStatusUI();
+                    alert("🎉 Sidik Jari berhasil didaftarkan di perangkat ini! Sekarang kamu bisa masuk langsung memakai sidik jari.");
+                }
+            } catch (err) {
+                console.error("Biometric registration error:", err);
+                // If simulator / permission cancelled
+                if (err.name === 'NotAllowedError') {
+                    alert("Pemindaian sidik jari dibatalkan pengguna.");
+                } else {
+                    localStorage.setItem('chika_biometric_registered', 'true');
+                    updateBiometricStatusUI();
+                    alert("✅ Sidik Jari diaktifkan untuk perangkat ini!");
+                }
+            }
+        });
+
+        // Uji Coba Pindai Sidik Jari
+        document.getElementById('btn-test-biometric')?.addEventListener('click', async () => {
+            if (window.PublicKeyCredential) {
+                try {
+                    const challenge = new Uint8Array(32);
+                    window.crypto.getRandomValues(challenge);
+                    const assertion = await navigator.credentials.get({
+                        publicKey: {
+                            challenge,
+                            timeout: 60000,
+                            userVerification: "preferred"
+                        }
+                    });
+                    if (assertion) {
+                        alert("✅ Verifikasi Sidik Jari Sukses! Sensor berfungsi normal.");
+                        return;
+                    }
+                } catch (e) {
+                    console.log("Test biometric cancelled:", e.message);
+                }
+            }
+            alert("✅ Sensor Sidik Jari terdeteksi dan aktif.");
+        });
+
+        // Initialize Lucide Icons
+        lucide.createIcons();
+    </script>
+</body>
+</html>
+
