@@ -230,15 +230,6 @@
                     <span>Target Tabungan</span>
                 </button>
 
-                <button class="nav-tab-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all" data-tab="tab-whatsapp">
-                    <div class="relative">
-                        <i data-lucide="message-square-code" class="w-4 h-4 text-emerald-400"></i>
-                        <span class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-                    </div>
-                    <span>WhatsApp Bot AI</span>
-                    <span class="ml-auto text-[9px] px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-300 font-bold uppercase tracking-wider">Live</span>
-                </button>
-
                 <button class="nav-tab-btn w-full flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-medium text-gray-400 hover:text-white hover:bg-white/5 transition-all" data-tab="tab-security">
                     <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
                     <span>Keamanan & PIN</span>
@@ -673,139 +664,7 @@
 
 
                 <!-- ============================================================== -->
-                <!-- TAB 6: WHATSAPP BOT AI & INTEGRATION SIMULATOR -->
-                <!-- ============================================================== -->
-                <section id="tab-whatsapp" class="tab-content hidden space-y-6">
-                    <div>
-                        <h2 class="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-                            <span>Integrasi WhatsApp Bot & AI Parser</span>
-                            <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 text-emerald-300 font-mono">Real-time Gateway</span>
-                        </h2>
-                        <p class="text-xs text-gray-400">Catat transaksi otomatis hanya dengan mengirim pesan chat WhatsApp biasa.</p>
-                    </div>
-
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                        <!-- Left: Live WhatsApp Chat Simulator (7 cols) -->
-                        <div class="lg:col-span-7 glass-card p-6 rounded-3xl flex flex-col justify-between h-[650px]">
-                            <div>
-                                <div class="flex items-center justify-between pb-4 border-b border-white/5">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-slate-950 font-bold">
-                                            <i data-lucide="message-circle" class="w-5 h-5"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-bold text-sm text-white flex items-center gap-1.5">
-                                                <span>Chika Finance Bot</span>
-                                                <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-400"></i>
-                                            </h4>
-                                            <span class="text-[10px] text-emerald-400 font-mono">Online • NLP Active</span>
-                                        </div>
-                                    </div>
-                                    <span class="text-[10px] text-gray-400">Live Simulator</span>
-                                </div>
-
-                                <!-- Preset Quick Prompts -->
-                                <div class="flex flex-wrap gap-1.5 my-3">
-                                    <button class="btn-sample-wa px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-emerald-400 border border-white/5">
-                                        beli kopi 25rb pake dana
-                                    </button>
-                                    <button class="btn-sample-wa px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-emerald-400 border border-white/5">
-                                        gajian 5jt masuk seabank
-                                    </button>
-                                    <button class="btn-sample-wa px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-emerald-400 border border-white/5">
-                                        tarik tunai dari seabank ke cash 300rb
-                                    </button>
-                                    <button class="btn-sample-wa px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-purple-400 border border-white/5">
-                                        cek saldo
-                                    </button>
-                                    <button class="btn-sample-wa px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-purple-400 border border-white/5">
-                                        laporan hari ini
-                                    </button>
-                                </div>
-                            </div>
-
-                            <!-- Chat Message Stream -->
-                            <div id="wa-chat-stream" class="flex-1 overflow-y-auto space-y-3 p-3 bg-black/20 rounded-2xl border border-white/5 my-2">
-                                <!-- Bot greeting message -->
-                                <div class="flex justify-start">
-                                    <div class="max-w-[85%] bg-[#121B22] text-slate-200 p-3.5 rounded-2xl rounded-tl-none text-xs border border-white/5 whitespace-pre-wrap leading-relaxed shadow-sm">Halo Arsinta! 👋 
-Saya bot asisten keuangan pribadimu. Kirimkan pesan seperti:
-• *"beli kopi 25rb pake dana"*
-• *"gajian 5jt masuk seabank"*
-• *"tarik tunai dari seabank ke cash 300rb"*
-• *"cek saldo"*
-Data otomatis tercatat di dashboard ini! 🚀</div>
-                                </div>
-                            </div>
-
-                            <!-- Chat Input Bar -->
-                            <form id="wa-sim-form" class="flex items-center gap-2 pt-2 border-t border-white/5">
-                                <input type="text" id="wa-sim-input" placeholder="Ketik pesan WhatsApp keuanganmu di sini..." class="flex-1 bg-white/5 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white focus:outline-none focus:border-emerald-500/50">
-                                <button type="submit" class="p-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold transition-all shadow-lg shadow-emerald-500/20">
-                                    <i data-lucide="send" class="w-4 h-4"></i>
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- Right: Webhook Setup Instructions (5 cols) -->
-                        <div class="lg:col-span-5 glass-card p-6 rounded-3xl space-y-5 overflow-y-auto h-[650px]">
-                            <div>
-                                <h4 class="font-bold text-base text-white mb-1">Panduan Koneksi Webhook WhatsApp</h4>
-                                <p class="text-xs text-gray-400">Cara menyambungkan endpoint server ini ke WhatsApp Gateway.</p>
-                            </div>
-
-                            <!-- Webhook URL Box -->
-                            <div class="p-4 rounded-2xl bg-white/5 border border-white/10 space-y-2">
-                                <span class="text-[10px] font-bold uppercase text-gray-400 tracking-wider">URL Endpoint Webhook</span>
-                                <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-black/40 border border-white/5">
-                                    <code class="text-xs text-emerald-400 font-mono select-all overflow-hidden text-ellipsis">http://localhost:3000/api/webhook/whatsapp</code>
-                                </div>
-                                <p class="text-[11px] text-gray-400 leading-normal">
-                                    💡 Gunakan <strong class="text-white">ngrok</strong> atau cloud hosting (Railway/Render) agar URL ini dapat diakses publik oleh gateway WhatsApp:
-                                    <code class="block text-[10px] bg-black/30 p-1.5 rounded mt-1 text-purple-300 font-mono">ngrok http 3000</code>
-                                </p>
-                            </div>
-
-                            <!-- Provider Steps -->
-                            <div class="space-y-3 text-xs">
-                                <div class="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-1.5">
-                                    <span class="font-bold text-white flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Opsi 1: Fonnte (Sangat Direkomendasikan)
-                                    </span>
-                                    <p class="text-gray-400 text-[11px]">
-                                        1. Daftar di <a href="https://fonnte.com" target="_blank" class="text-emerald-400 underline">fonnte.com</a> dan tautkan nomor WhatsApp.<br>
-                                        2. Di menu <strong>Webhook</strong>, masukkan URL webhook publikmu.<br>
-                                        3. Masukkan token Fonnte ke berkas <code class="text-white bg-black/30 px-1 rounded">.env</code>: <code class="text-emerald-300">FONNTE_TOKEN=...</code> untuk auto-reply via WhatsApp.
-                                    </p>
-                                </div>
-
-                                <div class="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-1.5">
-                                    <span class="font-bold text-white flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-blue-400"></span> Opsi 2: Wablas
-                                    </span>
-                                    <p class="text-gray-400 text-[11px]">
-                                        1. Masuk ke dashboard Wablas.<br>
-                                        2. Atur Webhook URL ke endpoint di atas.<br>
-                                        3. Sistem otomatis merespon pesan WhatsApp yang masuk.
-                                    </p>
-                                </div>
-
-                                <div class="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-1.5">
-                                    <span class="font-bold text-white flex items-center gap-1.5">
-                                        <span class="w-2 h-2 rounded-full bg-purple-400"></span> Opsi 3: WhatsApp Cloud API (Meta)
-                                    </span>
-                                    <p class="text-gray-400 text-[11px]">
-                                        Endpoint ini sudah mendukung verifikasi Webhook GET dengan verify token <code class="text-purple-300 bg-black/30 px-1 rounded">chika_finance_secret</code>.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </section>
-
-
-                <!-- ============================================================== -->
-                <!-- TAB 7: KEAMANAN, GANTI PIN & DAFTARKAN SIDIK JARI -->
+                <!-- TAB 6: KEAMANAN, GANTI PIN & DAFTARKAN SIDIK JARI -->
                 <!-- ============================================================== -->
                 <section id="tab-security" class="tab-content hidden space-y-6">
                     <div>
@@ -928,9 +787,9 @@ Data otomatis tercatat di dashboard ini! 🚀</div>
             <span class="text-[10px] font-medium">Grafik</span>
         </button>
 
-        <button class="nav-tab-btn flex flex-col items-center gap-1 py-1 text-gray-400 hover:text-white" data-tab="tab-whatsapp">
-            <i data-lucide="message-square-code" class="w-5 h-5"></i>
-            <span class="text-[10px] font-medium">Bot WA</span>
+        <button class="nav-tab-btn flex flex-col items-center gap-1 py-1 text-gray-400 hover:text-white" data-tab="tab-goals">
+            <i data-lucide="target" class="w-5 h-5"></i>
+            <span class="text-[10px] font-medium">Target</span>
         </button>
 
         <button class="nav-tab-btn flex flex-col items-center gap-1 py-1 text-gray-400 hover:text-white" data-tab="tab-security">
@@ -1246,11 +1105,11 @@ Data otomatis tercatat di dashboard ini! 🚀</div>
         }
 
         // Biometric Fingerprint Button Click (WebAuthn / Biometric simulation)
-        document.getElementById('btn-biometric-auth').onclick = async () => {
+        async function triggerFinanceUnlockBiometric() {
             const btn = document.getElementById('btn-biometric-auth');
-            btn.classList.add('scale-105');
+            if (btn) btn.classList.add('scale-105');
 
-            if (window.PublicKeyCredential) {
+            if (window.PublicKeyCredential && window.navigator && window.navigator.credentials) {
                 try {
                     const challenge = new Uint8Array(32);
                     window.crypto.getRandomValues(challenge);
@@ -1274,8 +1133,11 @@ Data otomatis tercatat di dashboard ini! 🚀</div>
             if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
             setTimeout(() => {
                 unlockSuccess();
-            }, 500);
-        };
+            }, 400);
+        }
+
+        const bioBtn = document.getElementById('btn-biometric-auth');
+        if (bioBtn) bioBtn.onclick = triggerFinanceUnlockBiometric;
 
         // Numpad PIN Logic
         const pinDots = document.querySelectorAll('.pin-dot');
@@ -1317,8 +1179,13 @@ Data otomatis tercatat di dashboard ini! 🚀</div>
             pinErrorMsg.textContent = "";
         }
 
-        // Click & Touch event delegation for numpad
+        // Click & Touch event delegation for numpad and biometric
         document.addEventListener('click', (e) => {
+            if (e.target.closest('#btn-biometric-auth')) {
+                e.preventDefault();
+                triggerFinanceUnlockBiometric();
+                return;
+            }
             const numBtn = e.target.closest('.numpad-btn[data-num]');
             if (numBtn) {
                 e.preventDefault();
@@ -2246,91 +2113,6 @@ Data otomatis tercatat di dashboard ini! 🚀</div>
                 formAllocate.reset();
             } catch (err) {
                 alert('Gagal mengalokasikan dana: ' + err.message);
-            }
-        };
-
-        // ==========================================
-        // WHATSAPP BOT SIMULATOR
-        // ==========================================
-        const waForm = document.getElementById('wa-sim-form');
-        const waInput = document.getElementById('wa-sim-input');
-        const waStream = document.getElementById('wa-chat-stream');
-
-        document.querySelectorAll('.btn-sample-wa').forEach(b => {
-            b.onclick = () => {
-                waInput.value = b.textContent.trim();
-                waForm.dispatchEvent(new Event('submit'));
-            };
-        });
-
-        waForm.onsubmit = async (e) => {
-            e.preventDefault();
-            const text = waInput.value.trim();
-            if (!text) return;
-
-            // Render user bubble
-            const userMsgHtml = `
-                <div class="flex justify-end">
-                    <div class="max-w-[80%] bg-emerald-600 text-white p-3 rounded-2xl rounded-tr-none text-xs shadow-sm">
-                        ${text}
-                    </div>
-                </div>
-            `;
-            waStream.insertAdjacentHTML('beforeend', userMsgHtml);
-            waInput.value = '';
-            waStream.scrollTop = waStream.scrollHeight;
-
-            // Typing indicator
-            const typingId = 'typing_' + Date.now();
-            const typingHtml = `
-                <div id="${typingId}" class="flex justify-start">
-                    <div class="bg-[#121B22] text-gray-400 p-2.5 rounded-2xl text-[11px] flex items-center gap-2">
-                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-                        <span>Bot sedang memproses...</span>
-                    </div>
-                </div>
-            `;
-            waStream.insertAdjacentHTML('beforeend', typingHtml);
-            waStream.scrollTop = waStream.scrollHeight;
-
-            try {
-                // Send to backend simulator endpoint
-                const res = await fetch('/api/bot-simulate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message: text })
-                });
-
-                const data = await res.json();
-                document.getElementById(typingId)?.remove();
-
-                const replyText = data.reply || "Maaf, pesan tidak dapat diproses.";
-
-                // Format markdown-style bold and italic for WhatsApp
-                const formattedReply = replyText
-                    .replace(/\*(.*?)\*/g, '<strong>$1</strong>')
-                    .replace(/_(.*?)_/g, '<em>$1</em>')
-                    .replace(/\n/g, '<br>');
-
-                const botMsgHtml = `
-                    <div class="flex justify-start">
-                        <div class="max-w-[85%] bg-[#121B22] text-slate-100 p-3.5 rounded-2xl rounded-tl-none text-xs border border-white/5 leading-relaxed shadow-sm">
-                            ${formattedReply}
-                        </div>
-                    </div>
-                `;
-                waStream.insertAdjacentHTML('beforeend', botMsgHtml);
-                waStream.scrollTop = waStream.scrollHeight;
-            } catch (err) {
-                document.getElementById(typingId)?.remove();
-                waStream.insertAdjacentHTML('beforeend', `
-                    <div class="flex justify-start">
-                        <div class="bg-rose-950/60 text-rose-300 p-3 rounded-2xl text-xs">
-                            Koneksi ke backend server gagal. Pastikan server Node berjalan (node server.js).
-                        </div>
-                    </div>
-                `);
-                waStream.scrollTop = waStream.scrollHeight;
             }
         };
 
