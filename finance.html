@@ -1293,31 +1293,60 @@ Data otomatis tercatat di dashboard ini! 🚀</div>
             });
         }
 
-        document.querySelectorAll('.numpad-btn[data-num]').forEach(btn => {
-            btn.onclick = () => {
-                if (enteredPin.length < 4) {
-                    enteredPin += btn.dataset.num;
-                    updatePinDisplay();
-                    pinErrorMsg.textContent = "";
+        function handleNumpadDigit(digit) {
+            if (enteredPin.length < 4) {
+                enteredPin += String(digit);
+                updatePinDisplay();
+                pinErrorMsg.textContent = "";
 
-                    if (enteredPin.length === 4) {
-                        verifyPin();
-                    }
+                if (enteredPin.length === 4) {
+                    verifyPin();
                 }
-            };
-        });
+            }
+        }
 
-        document.getElementById('btn-pin-back').onclick = () => {
+        function handleNumpadBack() {
             enteredPin = enteredPin.slice(0, -1);
             updatePinDisplay();
             pinErrorMsg.textContent = "";
-        };
+        }
 
-        document.getElementById('btn-pin-clear').onclick = () => {
+        function handleNumpadClear() {
             enteredPin = "";
             updatePinDisplay();
             pinErrorMsg.textContent = "";
-        };
+        }
+
+        // Click & Touch event delegation for numpad
+        document.addEventListener('click', (e) => {
+            const numBtn = e.target.closest('.numpad-btn[data-num]');
+            if (numBtn) {
+                e.preventDefault();
+                handleNumpadDigit(numBtn.dataset.num);
+                return;
+            }
+            if (e.target.closest('#btn-pin-back')) {
+                e.preventDefault();
+                handleNumpadBack();
+                return;
+            }
+            if (e.target.closest('#btn-pin-clear')) {
+                e.preventDefault();
+                handleNumpadClear();
+                return;
+            }
+        });
+
+        // Support physical keyboard (0-9, Backspace)
+        window.addEventListener('keydown', (e) => {
+            if (lockOverlay && !lockOverlay.classList.contains('hidden')) {
+                if (e.key >= '0' && e.key <= '9') {
+                    handleNumpadDigit(e.key);
+                } else if (e.key === 'Backspace') {
+                    handleNumpadBack();
+                }
+            }
+        });
 
         function verifyPin() {
             if (enteredPin === activePin) {

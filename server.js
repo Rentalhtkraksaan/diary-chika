@@ -38,6 +38,31 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static frontend files
 app.use(express.static(__dirname));
 
+// Explicit route handlers for root and main HTML pages
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/index.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+app.get('/finance', (req, res) => {
+    res.sendFile(path.join(__dirname, 'finance.html'));
+});
+
+app.get('/finance.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'finance.html'));
+});
+
+app.get('/real', (req, res) => {
+    res.sendFile(path.join(__dirname, 'real.html'));
+});
+
+app.get('/real.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'real.html'));
+});
+
 // Seed database on startup
 seedDatabaseIfEmpty().catch(err => console.error('Seed error:', err));
 
