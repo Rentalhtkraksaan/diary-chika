@@ -2109,9 +2109,15 @@
                                     <button onclick="window.openEditCategoryModal('${c.id}')" class="p-1.5 rounded-xl bg-white/5 hover:bg-pink-500/20 text-gray-400 hover:text-pink-300 transition-all cursor-pointer" title="Edit Kategori">
                                         <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                                     </button>
-                                    <button onclick="window.deleteCategory('${c.id}')" class="p-1.5 rounded-xl bg-white/5 hover:bg-rose-500/20 text-gray-400 hover:text-rose-400 transition-all cursor-pointer" title="Hapus Kategori">
-                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                                    </button>
+                                    ${(totalUsed > 0 || txCount > 0) ? `
+                                        <button onclick="window.deleteCategory('${c.id}')" class="p-1.5 rounded-xl bg-white/5 hover:bg-rose-500/20 text-gray-500 hover:text-rose-400 transition-all cursor-pointer" title="Terkunci: Ada ${txCount} transaksi (${formatRupiah(totalUsed)})">
+                                            <i data-lucide="lock" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    ` : `
+                                        <button onclick="window.deleteCategory('${c.id}')" class="p-1.5 rounded-xl bg-white/5 hover:bg-rose-500/20 text-gray-400 hover:text-rose-400 transition-all cursor-pointer" title="Hapus Kategori">
+                                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                        </button>
+                                    `}
                                 </div>
                             </div>
 
@@ -2946,9 +2952,27 @@
             const c = allCategories.find(x => x.id === catId);
             if (!c) return;
 
+            // Kategori transaksi kalau sudah ada nilainya / ada transaksinya tidak bisa dihapus
+            const totalUsed = (allTransactions || []).filter(t => t.category === c.name).reduce((sum, t) => sum + (t.amount || 0), 0);
+            const txCount = (allTransactions || []).filter(t => t.category === c.name).length;
+
+            if (totalUsed > 0 || txCount > 0) {
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'Kategori Tidak Bisa Dihapus! ⚠️',
+                    html: `Kategori <b>"${c.name}"</b> tidak dapat dihapus karena sudah memiliki riwayat <b>${txCount} transaksi</b> dengan total nominal <b class="text-pink-300 font-mono">${formatRupiah(totalUsed)}</b>.<br><br>Hapus atau ubah kategori pada transaksi terkait terlebih dahulu ya sayang 💕`,
+                    confirmButtonColor: '#EC4899',
+                    confirmButtonText: 'Aku Paham',
+                    background: '#140c1a',
+                    color: '#fdf2f8',
+                    customClass: { popup: 'rounded-3xl border border-pink-500/30' }
+                });
+                return;
+            }
+
             const { isConfirmed } = await Swal.fire({
                 title: 'Hapus Kategori? 🗑️',
-                html: `Apakah kamu yakin ingin menghapus kategori <b>"${c.name}"</b>?<br><span class="text-xs text-rose-300">Transaksi lama dengan kategori ini tetap ada.</span>`,
+                html: `Apakah kamu yakin ingin menghapus kategori <b>"${c.name}"</b>?`,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#F43F5E',
@@ -3011,12 +3035,24 @@
 
             try {
                 if (editId) {
+                    const oldCat = allCategories.find(x => x.id === editId);
+                    const oldName = oldCat?.name;
+
                     await update(ref(db, `categories/${editId}`), {
                         name,
                         type,
                         description,
                         color
                     });
+
+                    // Bila nama kategori diganti, sinkronkan juga ke semua riwayat transaksi yang memakai nama lama
+                    if (oldName && oldName !== name) {
+                        const txToUpdate = (allTransactions || []).filter(t => t.category === oldName);
+                        for (const tx of txToUpdate) {
+                            await update(ref(db, `transactions/${tx.id}`), { category: name });
+                        }
+                    }
+
                     Swal.fire({
                         icon: 'success',
                         title: 'Kategori Diperbarui! 🎉',
