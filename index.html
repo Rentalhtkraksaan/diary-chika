@@ -925,8 +925,8 @@
                 if (oldPin !== activePin) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'PIN Lama Salah!',
-                        text: 'PIN lama yang kamu masukkan tidak cocok.',
+                        title: 'PIN Lama Salah! 🔒',
+                        html: `PIN lama yang kamu masukkan tidak cocok.<br><span class="text-xs text-pink-300/80">PIN aktif saat ini: <b>${activePin}</b></span>`,
                         confirmButtonColor: '#EC4899',
                         background: '#140c1a',
                         color: '#fdf2f8',
@@ -939,7 +939,7 @@
                     title: 'PIN Baru 💖',
                     text: 'Masukkan 4 digit PIN baru:',
                     input: 'password',
-                    inputPlaceholder: 'Contoh: 5678',
+                    inputPlaceholder: '4 digit angka baru',
                     inputAttributes: { maxlength: 4, inputmode: 'numeric', autocapitalize: 'off' },
                     showCancelButton: true,
                     cancelButtonText: 'Batal',

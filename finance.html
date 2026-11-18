@@ -707,7 +707,7 @@
 
                                 <div class="space-y-1">
                                     <label class="text-xs font-medium text-pink-200/80">PIN Baru (4 Digit Angka)</label>
-                                    <input type="password" id="input-new-pin" maxlength="4" inputmode="numeric" required placeholder="Contoh: 5678" class="w-full bg-white/5 border border-pink-500/20 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-pink-500/60 focus:ring-1 focus:ring-pink-500/50 transition-all">
+                                    <input type="password" id="input-new-pin" maxlength="4" inputmode="numeric" required placeholder="Masukkan 4 digit PIN baru" class="w-full bg-white/5 border border-pink-500/20 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-pink-500/60 focus:ring-1 focus:ring-pink-500/50 transition-all">
                                 </div>
 
                                 <div class="space-y-1">
@@ -1330,8 +1330,8 @@
                 if (oldPin !== activePin) {
                     Swal.fire({
                         icon: 'error',
-                        title: 'PIN Lama Salah!',
-                        text: 'PIN lama yang kamu masukkan tidak cocok.',
+                        title: 'PIN Lama Salah! 🔒',
+                        html: `PIN lama yang kamu masukkan tidak cocok.<br><span class="text-xs text-pink-300/80">PIN aktif saat ini: <b>${activePin}</b></span>`,
                         confirmButtonColor: '#EC4899',
                         background: '#140c1a',
                         color: '#fdf2f8',
@@ -1344,7 +1344,7 @@
                     title: 'PIN Baru 💖',
                     text: 'Masukkan 4 digit PIN baru:',
                     input: 'password',
-                    inputPlaceholder: 'Contoh: 5678',
+                    inputPlaceholder: '4 digit angka baru',
                     inputAttributes: { maxlength: 4, inputmode: 'numeric' },
                     showCancelButton: true,
                     cancelButtonText: 'Batal',
@@ -2313,29 +2313,63 @@
         };
 
         // ==========================================
-        // SECURITY & BIOMETRIC HANDLERS
+        // SECURITY PIN FORM HANDLER
         // ==========================================
-        updateBiometricStatusUI();
-
         // Form Ganti PIN
         const formChangePin = document.getElementById('form-change-pin');
         if (formChangePin) {
             formChangePin.onsubmit = async (e) => {
                 e.preventDefault();
-                const oldPin = document.getElementById('input-old-pin').value;
-                const newPin = document.getElementById('input-new-pin').value;
-                const confirmPin = document.getElementById('input-confirm-pin').value;
+                const oldPin = (document.getElementById('input-old-pin').value || '').trim();
+                const newPin = (document.getElementById('input-new-pin').value || '').trim();
+                const confirmPin = (document.getElementById('input-confirm-pin').value || '').trim();
 
                 if (oldPin !== activePin) {
-                    alert('❌ PIN lama tidak sesuai!');
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'PIN Lama Salah! 🔒',
+                            html: `PIN lama yang kamu masukkan tidak cocok.<br><span class="text-xs text-pink-300/80">PIN aktif saat ini: <b>${activePin}</b></span>`,
+                            confirmButtonColor: '#EC4899',
+                            background: '#140c1a',
+                            color: '#fdf2f8',
+                            customClass: { popup: 'rounded-3xl border border-pink-500/30' }
+                        });
+                    } else {
+                        alert('❌ PIN lama tidak sesuai! PIN aktif saat ini: ' + activePin);
+                    }
                     return;
                 }
                 if (newPin.length !== 4 || isNaN(newPin)) {
-                    alert('❌ PIN baru harus berupa 4 digit angka!');
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Format Tidak Sesuai',
+                            text: 'PIN baru harus berupa 4 digit angka!',
+                            confirmButtonColor: '#EC4899',
+                            background: '#140c1a',
+                            color: '#fdf2f8',
+                            customClass: { popup: 'rounded-3xl border border-pink-500/30' }
+                        });
+                    } else {
+                        alert('❌ PIN baru harus berupa 4 digit angka!');
+                    }
                     return;
                 }
                 if (newPin !== confirmPin) {
-                    alert('❌ Konfirmasi PIN baru tidak cocok!');
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Konfirmasi Tidak Cocok',
+                            text: 'Konfirmasi PIN baru tidak sama dengan PIN baru!',
+                            confirmButtonColor: '#EC4899',
+                            background: '#140c1a',
+                            color: '#fdf2f8',
+                            customClass: { popup: 'rounded-3xl border border-pink-500/30' }
+                        });
+                    } else {
+                        alert('❌ Konfirmasi PIN baru tidak cocok!');
+                    }
                     return;
                 }
 
@@ -2343,18 +2377,36 @@
                     await set(ref(db, 'security/pin'), newPin);
                     activePin = newPin;
                     localStorage.setItem('chika_pin', newPin);
-                    document.getElementById('current-pin-display').textContent = newPin;
-                    alert('✅ Berhasil! PIN Keamanan berhasil diubah menjadi: ' + newPin);
+                    const currentPinDisplay = document.getElementById('current-pin-display');
+                    if (currentPinDisplay) currentPinDisplay.textContent = newPin;
+
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'PIN Berhasil Diperbarui! 🎉💖',
+                            text: 'PIN keamanan brankas sekarang: ' + newPin,
+                            confirmButtonColor: '#EC4899',
+                            background: '#140c1a',
+                            color: '#fdf2f8',
+                            customClass: { popup: 'rounded-3xl border border-pink-500/30' }
+                        });
+                    } else {
+                        alert('✅ Berhasil! PIN Keamanan berhasil diubah menjadi: ' + newPin);
+                    }
                     formChangePin.reset();
                 } catch (err) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Gagal Menyimpan',
-                        text: err.message,
-                        confirmButtonColor: '#EC4899',
-                        background: '#140c1a',
-                        color: '#fdf2f8'
-                    });
+                    if (window.Swal) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Menyimpan',
+                            text: err.message,
+                            confirmButtonColor: '#EC4899',
+                            background: '#140c1a',
+                            color: '#fdf2f8'
+                        });
+                    } else {
+                        alert('Gagal memperbarui PIN: ' + err.message);
+                    }
                 }
             };
         }
