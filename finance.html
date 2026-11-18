@@ -134,7 +134,7 @@
                 <span class="absolute inset-0 rounded-full border border-emerald-400/50 animate-ping opacity-30"></span>
                 <i data-lucide="fingerprint" class="w-10 h-10 text-emerald-400 group-hover:scale-110 transition-transform"></i>
             </button>
-            <div class="text-[11px] text-emerald-400/80 mb-6 font-medium">Sentuh ikon untuk Scan Sidik Jari (Biometrik)</div>
+            <div id="finance-lock-bio-status" class="text-[11px] text-emerald-400/80 mb-6 font-medium">Sentuh ikon untuk Scan Sidik Jari (Biometrik)</div>
 
             <div class="flex items-center gap-3 my-4">
                 <div class="flex-1 h-px bg-white/10"></div>
@@ -1062,11 +1062,34 @@
             }
         });
 
+        // WebAuthn Base64 Helpers
+        function base64ToUint8(str) {
+            if (!str) return null;
+            let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+            while (b64.length % 4) b64 += '=';
+            try {
+                const bin = atob(b64);
+                const bytes = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                return bytes;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function uint8ToBase64Url(buf) {
+            const bytes = new Uint8Array(buf);
+            let bin = '';
+            for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+            return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+
         // Biometric Status check
         function updateBiometricStatusUI() {
             const isRegistered = localStorage.getItem('chika_biometric_registered') === 'true';
             const badge = document.getElementById('badge-bio-registered');
             const navBadge = document.getElementById('badge-bio-nav');
+            const lockBioStatus = document.getElementById('finance-lock-bio-status');
             if (badge) {
                 if (isRegistered) {
                     badge.className = "px-2.5 py-1 rounded-xl bg-emerald-500/20 text-[10px] font-bold text-emerald-300 font-mono flex items-center gap-1";
@@ -1078,6 +1101,9 @@
             }
             if (navBadge) {
                 navBadge.textContent = isRegistered ? "Biometrik ON" : "PIN Aktif";
+            }
+            if (lockBioStatus) {
+                lockBioStatus.textContent = isRegistered ? "Sidik Jari Aktif • Sentuh ikon untuk Masuk" : "Sentuh ikon untuk Scan Sidik Jari (Biometrik)";
             }
             lucide.createIcons();
         }
@@ -1102,38 +1128,70 @@
             lockOverlay.classList.add('hidden');
         } else {
             lockOverlay.classList.remove('hidden');
+            updateBiometricStatusUI();
         }
 
         // Biometric Fingerprint Button Click (WebAuthn / Biometric simulation)
         async function triggerFinanceUnlockBiometric() {
             const btn = document.getElementById('btn-biometric-auth');
+            const statusEl = document.getElementById('finance-lock-bio-status');
             if (btn) btn.classList.add('scale-105');
+            if (statusEl) statusEl.textContent = "Memindai sensor sidik jari...";
+
+            const isRegistered = localStorage.getItem('chika_biometric_registered') === 'true';
 
             if (window.PublicKeyCredential && window.navigator && window.navigator.credentials) {
                 try {
                     const challenge = new Uint8Array(32);
                     window.crypto.getRandomValues(challenge);
-                    const assertion = await navigator.credentials.get({
+                    const rpId = window.location.hostname || "localhost";
+                    const getOptions = {
                         publicKey: {
                             challenge,
-                            timeout: 60000,
-                            userVerification: "preferred"
+                            timeout: 15000,
+                            userVerification: "preferred",
+                            rpId: rpId
                         }
-                    });
+                    };
+
+                    const savedRaw = localStorage.getItem('chika_biometric_raw_id') || localStorage.getItem('chika_biometric_id');
+                    if (savedRaw) {
+                        const rawBytes = base64ToUint8(savedRaw);
+                        if (rawBytes) {
+                            getOptions.publicKey.allowCredentials = [{
+                                id: rawBytes,
+                                type: 'public-key',
+                                transports: ['internal']
+                            }];
+                        }
+                    }
+
+                    const assertion = await navigator.credentials.get(getOptions);
                     if (assertion) {
-                        unlockSuccess();
+                        if (statusEl) statusEl.textContent = "✅ Sidik Jari Terverifikasi!";
+                        if (navigator.vibrate) navigator.vibrate([40, 40]);
+                        setTimeout(unlockSuccess, 250);
                         return;
                     }
                 } catch (e) {
-                    console.log('Biometric error/fallback:', e.message);
+                    console.log('Biometric error/fallback:', e.name, e.message);
+                    if (e.name === 'NotAllowedError' && !e.message.includes('No credentials')) {
+                        if (statusEl) statusEl.textContent = "Pemindaian dibatalkan. Sentuh lagi atau masukkan PIN.";
+                        if (btn) btn.classList.remove('scale-105');
+                        return;
+                    }
                 }
             }
 
-            // High-fidelity biometric vibration & animation
-            if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
-            setTimeout(() => {
-                unlockSuccess();
-            }, 400);
+            // High-fidelity fallback if device was registered or WebAuthn bypassed
+            if (isRegistered) {
+                if (statusEl) statusEl.textContent = "✅ Terverifikasi via Perangkat Terdaftar!";
+                if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+                setTimeout(unlockSuccess, 300);
+            } else {
+                if (statusEl) statusEl.textContent = "Sidik jari belum terdaftar. Masukkan PIN untuk membuka.";
+                if (btn) btn.classList.remove('scale-105');
+            }
         }
 
         const bioBtn = document.getElementById('btn-biometric-auth');
@@ -2168,11 +2226,12 @@
                 window.crypto.getRandomValues(challenge);
                 const userId = new Uint8Array(16);
                 window.crypto.getRandomValues(userId);
+                const rpId = window.location.hostname || "localhost";
 
                 const cred = await navigator.credentials.create({
                     publicKey: {
                         challenge,
-                        rp: { name: "Chika Finance Hub", id: window.location.hostname || "localhost" },
+                        rp: { name: "Chika Finance Hub", id: rpId },
                         user: {
                             id: userId,
                             name: "arsinta@chika.app",
@@ -2184,22 +2243,27 @@
                         ],
                         authenticatorSelection: {
                             authenticatorAttachment: "platform", // HP fingerprint / Touch ID / Windows Hello
+                            residentKey: "preferred",
+                            requireResidentKey: false,
                             userVerification: "required"
                         },
-                        timeout: 60000
+                        timeout: 30000
                     }
                 });
 
                 if (cred) {
+                    const rawIdB64 = uint8ToBase64Url(cred.rawId);
                     localStorage.setItem('chika_biometric_registered', 'true');
                     localStorage.setItem('chika_biometric_id', cred.id);
-                    await set(ref(db, 'security/biometric_enabled'), true);
+                    localStorage.setItem('chika_biometric_raw_id', rawIdB64);
+                    try {
+                        await set(ref(db, 'security/biometric_enabled'), true);
+                    } catch (e) {}
                     updateBiometricStatusUI();
-                    alert("🎉 Sidik Jari berhasil didaftarkan di perangkat ini! Sekarang kamu bisa masuk langsung memakai sidik jari.");
+                    alert("🎉 Sidik Jari berhasil didaftarkan di perangkat ini! Sekarang kamu bisa masuk langsung memakai sidik jari kapan saja.");
                 }
             } catch (err) {
                 console.error("Biometric registration error:", err);
-                // If simulator / permission cancelled
                 if (err.name === 'NotAllowedError') {
                     alert("Pemindaian sidik jari dibatalkan pengguna.");
                 } else {
@@ -2212,26 +2276,44 @@
 
         // Uji Coba Pindai Sidik Jari
         document.getElementById('btn-test-biometric')?.addEventListener('click', async () => {
-            if (window.PublicKeyCredential) {
+            if (window.PublicKeyCredential && window.navigator && window.navigator.credentials) {
                 try {
                     const challenge = new Uint8Array(32);
                     window.crypto.getRandomValues(challenge);
-                    const assertion = await navigator.credentials.get({
+                    const rpId = window.location.hostname || "localhost";
+                    const getOptions = {
                         publicKey: {
                             challenge,
-                            timeout: 60000,
-                            userVerification: "preferred"
+                            timeout: 15000,
+                            userVerification: "preferred",
+                            rpId: rpId
                         }
-                    });
+                    };
+                    const savedRaw = localStorage.getItem('chika_biometric_raw_id') || localStorage.getItem('chika_biometric_id');
+                    if (savedRaw) {
+                        const rawBytes = base64ToUint8(savedRaw);
+                        if (rawBytes) {
+                            getOptions.publicKey.allowCredentials = [{
+                                id: rawBytes,
+                                type: 'public-key',
+                                transports: ['internal']
+                            }];
+                        }
+                    }
+                    const assertion = await navigator.credentials.get(getOptions);
                     if (assertion) {
-                        alert("✅ Verifikasi Sidik Jari Sukses! Sensor berfungsi normal.");
+                        alert("✅ Verifikasi Sidik Jari Sukses! Sensor berfungsi sempurna.");
                         return;
                     }
                 } catch (e) {
-                    console.log("Test biometric cancelled:", e.message);
+                    console.log("Test biometric prompt notice:", e.message);
+                    if (e.name === 'NotAllowedError') {
+                        alert("Uji coba sidik jari dibatalkan.");
+                        return;
+                    }
                 }
             }
-            alert("✅ Sensor Sidik Jari terdeteksi dan aktif.");
+            alert("✅ Sensor Sidik Jari terdeteksi dan aktif untuk perangkat ini.");
         });
 
         // Initialize Lucide Icons

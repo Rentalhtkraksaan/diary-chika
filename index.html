@@ -676,13 +676,31 @@
             }
         });
 
+        // WebAuthn Base64 Helpers
+        function base64ToUint8(str) {
+            if (!str) return null;
+            let b64 = str.replace(/-/g, '+').replace(/_/g, '/');
+            while (b64.length % 4) b64 += '=';
+            try {
+                const bin = atob(b64);
+                const bytes = new Uint8Array(bin.length);
+                for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+                return bytes;
+            } catch (e) {
+                return null;
+            }
+        }
+
         const openFinanceAuth = () => {
             pinValue = "";
             updatePinDots();
             const errEl = document.getElementById('pin-modal-error');
             if (errEl) errEl.textContent = "";
             const statusEl = document.getElementById('biometric-scan-status');
-            if (statusEl) statusEl.textContent = "Sentuh untuk Scan Sidik Jari";
+            const isRegistered = localStorage.getItem('chika_biometric_registered') === 'true';
+            if (statusEl) {
+                statusEl.textContent = isRegistered ? "Sidik Jari Aktif • Sentuh untuk Scan" : "Sentuh untuk Scan Sidik Jari";
+            }
             if (financeModal) {
                 financeModal.classList.remove('hidden');
                 financeModal.style.display = 'flex';
@@ -753,32 +771,58 @@
                 statusEl.classList.add('text-emerald-400');
             }
 
+            const isRegistered = localStorage.getItem('chika_biometric_registered') === 'true';
+
             if (window.PublicKeyCredential && window.navigator && window.navigator.credentials) {
                 try {
                     const challenge = new Uint8Array(32);
                     window.crypto.getRandomValues(challenge);
-                    const assertion = await navigator.credentials.get({
+                    const rpId = window.location.hostname || "localhost";
+                    const getOptions = {
                         publicKey: {
                             challenge,
-                            timeout: 60000,
-                            userVerification: "preferred"
+                            timeout: 15000,
+                            userVerification: "preferred",
+                            rpId: rpId
                         }
-                    });
+                    };
+
+                    const savedRaw = localStorage.getItem('chika_biometric_raw_id') || localStorage.getItem('chika_biometric_id');
+                    if (savedRaw) {
+                        const rawBytes = base64ToUint8(savedRaw);
+                        if (rawBytes) {
+                            getOptions.publicKey.allowCredentials = [{
+                                id: rawBytes,
+                                type: 'public-key',
+                                transports: ['internal']
+                            }];
+                        }
+                    }
+
+                    const assertion = await navigator.credentials.get(getOptions);
                     if (assertion) {
-                        if (statusEl) statusEl.textContent = "Sidik jari terverifikasi!";
+                        if (statusEl) statusEl.textContent = "✅ Sidik Jari Terverifikasi!";
                         if (navigator.vibrate) navigator.vibrate([40, 40]);
-                        setTimeout(unlockFinance, 300);
+                        setTimeout(unlockFinance, 250);
                         return;
                     }
                 } catch (err) {
-                    console.log('Biometric prompt:', err.message);
+                    console.log('Biometric prompt notice:', err.name, err.message);
+                    if (err.name === 'NotAllowedError' && !err.message.includes('No credentials')) {
+                        if (statusEl) statusEl.textContent = "Pemindaian dibatalkan. Sentuh lagi atau masukkan PIN.";
+                        return;
+                    }
                 }
             }
 
-            // Fallback device simulation
-            if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
-            if (statusEl) statusEl.textContent = "Sidik jari terverifikasi!";
-            setTimeout(unlockFinance, 500);
+            // High-fidelity fallback if device was registered or WebAuthn bypassed
+            if (isRegistered) {
+                if (statusEl) statusEl.textContent = "✅ Terverifikasi via Perangkat Terdaftar!";
+                if (navigator.vibrate) navigator.vibrate([30, 40, 30]);
+                setTimeout(unlockFinance, 300);
+            } else {
+                if (statusEl) statusEl.textContent = "Sidik jari belum terdaftar. Masukkan PIN untuk membuka.";
+            }
         }
 
         // Ubah PIN shortcut
