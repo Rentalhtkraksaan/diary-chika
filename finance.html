@@ -44,6 +44,35 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
+        /* Force Dark Mode & Girly Pink Theme on All Form Controls */
+        html, body, select, input, textarea, optgroup, option {
+            color-scheme: dark !important;
+        }
+
+        select {
+            background-color: #140b1b !important;
+            color: #fdf2f8 !important;
+            border-color: rgba(236, 72, 153, 0.25) !important;
+        }
+
+        select option, select optgroup {
+            background-color: #160D1F !important;
+            color: #FDF2F8 !important;
+            font-size: 13px !important;
+            padding: 10px 14px !important;
+        }
+
+        select optgroup {
+            color: #F472B6 !important;
+            font-weight: 700 !important;
+            background-color: #0E0714 !important;
+        }
+
+        select option:checked, select option:hover, select option:focus {
+            background-color: #EC4899 !important;
+            color: #FFFFFF !important;
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             -webkit-tap-highlight-color: transparent;
@@ -842,10 +871,16 @@
 
     <!-- MODAL A: TAMBAH / CATAT TRANSAKSI (Manual & Transfer Antar-Dompet) -->
     <div id="modal-transaction" class="fixed inset-0 z-[150] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="glass-card max-w-lg w-full p-6 md:p-8 rounded-3xl border border-white/10 shadow-2xl relative overflow-hidden">
+        <div class="glass-card max-w-lg w-full p-6 md:p-8 rounded-3xl border border-pink-500/30 shadow-2xl shadow-pink-950/60 relative overflow-visible bg-[#120a1a]/95">
             <div class="flex items-center justify-between mb-6">
-                <h3 id="modal-tx-title" class="text-xl font-bold text-white tracking-tight">Catat Transaksi Baru</h3>
-                <button id="btn-close-modal-tx" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white">
+                <div>
+                    <h3 id="modal-tx-title" class="text-xl font-bold text-white tracking-tight flex items-center gap-2">
+                        <span>Catat Transaksi Baru</span>
+                        <span class="text-sm">💖</span>
+                    </h3>
+                    <p class="text-xs text-pink-200/60">Pencatatan keuangan harian yang rapi & estetik</p>
+                </div>
+                <button id="btn-close-modal-tx" class="p-2 rounded-xl bg-white/5 hover:bg-pink-500/20 text-gray-400 hover:text-pink-300 transition-all cursor-pointer">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -869,8 +904,8 @@
 
                 <!-- Regular Wallet Selector (for Income & Expense) -->
                 <div id="wrapper-single-wallet" class="space-y-1">
-                    <label class="text-xs font-medium text-gray-400">Dompet</label>
-                    <select id="form-tx-wallet" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                    <label class="text-xs font-medium text-pink-200/80">Dompet Sumber</label>
+                    <select id="form-tx-wallet" class="w-full bg-[#170e20] border border-pink-500/25 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-pink-500/60 focus:ring-1 focus:ring-pink-500/40">
                         <!-- Populated by JS -->
                     </select>
                 </div>
@@ -878,14 +913,14 @@
                 <!-- Transfer Antar-Dompet Selectors (from source -> to target) -->
                 <div id="wrapper-transfer-wallets" class="hidden grid grid-cols-2 gap-3">
                     <div class="space-y-1">
-                        <label class="text-xs font-medium text-gray-400">Dompet Asal (Keluar)</label>
-                        <select id="form-tx-source-wallet" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-purple-500/50">
+                        <label class="text-xs font-medium text-pink-200/80">Dompet Asal (Keluar)</label>
+                        <select id="form-tx-source-wallet" class="w-full bg-[#170e20] border border-pink-500/25 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-pink-500/60 focus:ring-1 focus:ring-pink-500/40">
                             <!-- Populated by JS -->
                         </select>
                     </div>
                     <div class="space-y-1">
-                        <label class="text-xs font-medium text-gray-400">Dompet Tujuan (Masuk)</label>
-                        <select id="form-tx-target-wallet" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-purple-500/50">
+                        <label class="text-xs font-medium text-pink-200/80">Dompet Tujuan (Masuk)</label>
+                        <select id="form-tx-target-wallet" class="w-full bg-[#170e20] border border-pink-500/25 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-pink-500/60 focus:ring-1 focus:ring-pink-500/40">
                             <!-- Populated by JS -->
                         </select>
                     </div>
@@ -893,41 +928,57 @@
 
                 <!-- Amount -->
                 <div class="space-y-1">
-                    <label class="text-xs font-medium text-gray-400">Nominal (Rupiah)</label>
+                    <label class="text-xs font-medium text-pink-200/80">Nominal (Rupiah)</label>
                     <div class="relative">
-                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-gray-400">Rp</span>
-                        <input type="number" id="form-tx-amount" required placeholder="0" class="w-full bg-white/5 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-white focus:outline-none focus:border-emerald-500/50">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-bold text-pink-400">Rp</span>
+                        <input type="number" id="form-tx-amount" required placeholder="0" class="w-full bg-[#170e20] border border-pink-500/25 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-pink-200 focus:outline-none focus:border-pink-500/60 focus:ring-1 focus:ring-pink-500/40">
                     </div>
                 </div>
 
                 <!-- Category (Wajib Diisi) -->
                 <div id="wrapper-category" class="space-y-1">
                     <div class="flex items-center justify-between">
-                        <label class="text-xs font-medium text-gray-400">Kategori <span class="text-rose-400 font-bold">* (Wajib)</span></label>
+                        <label class="text-xs font-medium text-pink-200/80">Kategori <span class="text-rose-400 font-bold">* (Wajib)</span></label>
                         <button type="button" onclick="window.openAddCategoryModal()" class="text-[11px] text-pink-400 hover:text-pink-300 font-semibold flex items-center gap-1 cursor-pointer">
-                            <i data-lucide="plus" class="w-3 h-3"></i> + Kategori Baru
+                            <i data-lucide="plus-circle" class="w-3.5 h-3.5"></i> Kategori Baru
                         </button>
                     </div>
-                    <select id="form-tx-category" required class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
-                        <!-- Populated dynamically by JS from categories -->
-                    </select>
+
+                    <!-- Hidden input for standard form submission & value reading -->
+                    <input type="hidden" id="form-tx-category" required value="">
+
+                    <!-- Custom Aesthetic Pink Dropdown -->
+                    <div class="relative" id="custom-cat-dropdown-container">
+                        <button type="button" id="btn-custom-cat-toggle" class="w-full bg-[#170e20] border border-pink-500/25 hover:border-pink-500/50 rounded-2xl p-3.5 text-xs text-white flex items-center justify-between transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-pink-500/40">
+                            <div class="flex items-center gap-2.5 truncate" id="custom-cat-display">
+                                <span class="w-2.5 h-2.5 rounded-full bg-pink-400 shadow-sm shadow-pink-400/50 flex-shrink-0" id="custom-cat-dot"></span>
+                                <span class="font-medium text-pink-100 truncate" id="custom-cat-name">Pilih Kategori...</span>
+                            </div>
+                            <i data-lucide="chevron-down" id="custom-cat-chevron" class="w-4 h-4 text-pink-300/80 transition-transform duration-200 flex-shrink-0"></i>
+                        </button>
+
+                        <!-- Dropdown List Panel -->
+                        <div id="custom-cat-panel" class="hidden absolute left-0 right-0 top-full mt-2 z-[250] max-h-60 overflow-y-auto rounded-2xl bg-[#140b1b]/98 backdrop-blur-2xl border border-pink-500/35 shadow-2xl shadow-pink-950/80 p-2 space-y-1">
+                            <!-- Populated dynamically with aesthetic pink items and headers -->
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Notes / Description (Wajib Diisi) -->
                 <div class="space-y-1">
-                    <label class="text-xs font-medium text-gray-400">Catatan / Keterangan <span class="text-rose-400 font-bold">* (Wajib)</span></label>
-                    <input type="text" id="form-tx-notes" required placeholder="Contoh: Makan siang bareng, gajian bulanan, skincare..." class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                    <label class="text-xs font-medium text-pink-200/80">Catatan / Keterangan <span class="text-rose-400 font-bold">* (Wajib)</span></label>
+                    <input type="text" id="form-tx-notes" required placeholder="Contoh: Makan siang bareng, gajian bulanan, skincare..." class="w-full bg-[#170e20] border border-pink-500/25 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-pink-500/60 focus:ring-1 focus:ring-pink-500/40">
                 </div>
 
                 <!-- Date -->
                 <div class="space-y-1">
-                    <label class="text-xs font-medium text-gray-400">Tanggal</label>
-                    <input type="date" id="form-tx-date" class="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-emerald-500/50">
+                    <label class="text-xs font-medium text-pink-200/80">Tanggal</label>
+                    <input type="date" id="form-tx-date" class="w-full bg-[#170e20] border border-pink-500/25 rounded-2xl p-3.5 text-xs text-white focus:outline-none focus:border-pink-500/60 focus:ring-1 focus:ring-pink-500/40">
                 </div>
 
                 <div class="pt-4 flex gap-3">
-                    <button type="button" id="btn-cancel-modal-tx" class="flex-1 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-gray-300">Batal</button>
-                    <button type="submit" id="btn-save-tx" class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20">Simpan Transaksi</button>
+                    <button type="button" id="btn-cancel-modal-tx" class="flex-1 py-3.5 rounded-2xl bg-white/5 hover:bg-white/10 text-xs font-semibold text-pink-200/70 transition-all cursor-pointer">Batal</button>
+                    <button type="submit" id="btn-save-tx" class="flex-1 py-3.5 rounded-2xl bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 text-white font-bold text-xs shadow-lg shadow-pink-500/30 transition-all cursor-pointer">Simpan Transaksi 💖</button>
                 </div>
             </form>
         </div>
@@ -1784,42 +1835,127 @@
             });
         }
 
+        window.selectCustomCategory = (name, color = '#EC4899', close = true) => {
+            const hiddenCatInput = document.getElementById('form-tx-category');
+            const catDisplay = document.getElementById('custom-cat-name');
+            const catDot = document.getElementById('custom-cat-dot');
+            const catPanel = document.getElementById('custom-cat-panel');
+            const chevron = document.getElementById('custom-cat-chevron');
+
+            if (hiddenCatInput) hiddenCatInput.value = name;
+            if (catDisplay) {
+                catDisplay.textContent = name;
+                catDisplay.classList.remove('text-pink-100/60');
+                catDisplay.classList.add('text-white');
+            }
+            if (catDot) {
+                catDot.style.backgroundColor = color;
+                catDot.style.boxShadow = `0 0 10px ${color}80`;
+            }
+
+            if (close && catPanel) {
+                catPanel.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+
+            // Update item highlights inside panel
+            if (catPanel) {
+                const items = catPanel.querySelectorAll('[data-cat-item]');
+                items.forEach(el => {
+                    const isCur = el.getAttribute('data-cat-item') === name;
+                    if (isCur) {
+                        el.className = 'p-2.5 rounded-xl bg-gradient-to-r from-pink-500/25 to-rose-500/20 border border-pink-500/40 text-pink-200 font-bold transition-all cursor-pointer flex items-center justify-between group';
+                        if (!el.querySelector('.cat-check-icon')) {
+                            const iconSpan = document.createElement('span');
+                            iconSpan.className = 'cat-check-icon text-pink-400 text-xs font-bold';
+                            iconSpan.textContent = '✓';
+                            el.appendChild(iconSpan);
+                        }
+                    } else {
+                        el.className = 'p-2.5 rounded-xl hover:bg-pink-500/10 text-gray-200 hover:text-pink-100 border border-transparent transition-all cursor-pointer flex items-center justify-between group';
+                        const check = el.querySelector('.cat-check-icon');
+                        if (check) check.remove();
+                    }
+                });
+            }
+        };
+
         function populateCategoryDropdowns(selectedCategory = null) {
-            const formCatSelect = document.getElementById('form-tx-category');
+            const hiddenCatInput = document.getElementById('form-tx-category');
+            const catPanel = document.getElementById('custom-cat-panel');
             const filterCatSelect = document.getElementById('filter-category-select');
 
-            // 1. Transaction Form Category Select
-            if (formCatSelect) {
+            // 1. Transaction Form Category Select (Custom Pink Aesthetic Dropdown)
+            if (catPanel && hiddenCatInput) {
                 if (activeTxType === 'transfer') {
-                    formCatSelect.innerHTML = '<option value="Transfer Antar-Dompet">Transfer Antar-Dompet</option>';
+                    selectCustomCategory('Transfer Antar-Dompet', '#A855F7', false);
+                    catPanel.innerHTML = `
+                        <div data-cat-item="Transfer Antar-Dompet" onclick="selectCustomCategory('Transfer Antar-Dompet', '#A855F7')" class="p-2.5 rounded-xl bg-pink-500/20 text-pink-200 font-semibold text-xs flex items-center justify-between cursor-pointer">
+                            <div class="flex items-center gap-2.5">
+                                <span class="w-2.5 h-2.5 rounded-full bg-purple-400 shadow-sm shadow-purple-400/50"></span>
+                                <span>Transfer Antar-Dompet</span>
+                            </div>
+                            <span class="cat-check-icon text-pink-400 text-xs font-bold">✓</span>
+                        </div>
+                    `;
                 } else {
                     const matchedCats = allCategories.filter(c => c.type === activeTxType || c.type === 'both');
                     const otherCats = allCategories.filter(c => c.type !== activeTxType && c.type !== 'both');
 
                     let html = '';
-                    if (matchedCats.length > 0 && otherCats.length > 0) {
-                        html += `<optgroup label="Saran ${activeTxType === 'income' ? 'Pemasukan' : 'Pengeluaran'}">`;
-                        matchedCats.forEach(c => {
-                            html += `<option value="${c.name}">${c.name}</option>`;
-                        });
-                        html += '</optgroup>';
 
-                        html += '<optgroup label="Semua Kategori Lainnya">';
-                        otherCats.forEach(c => {
-                            html += `<option value="${c.name}">${c.name}</option>`;
-                        });
-                        html += '</optgroup>';
-                    } else {
-                        allCategories.forEach(c => {
-                            html += `<option value="${c.name}">${c.name}</option>`;
-                        });
+                    const renderItem = (c) => {
+                        const isCur = (selectedCategory ? selectedCategory === c.name : hiddenCatInput.value === c.name);
+                        const activeClass = isCur 
+                            ? 'bg-gradient-to-r from-pink-500/25 to-rose-500/20 border border-pink-500/40 text-pink-200 font-bold' 
+                            : 'hover:bg-pink-500/10 text-gray-200 hover:text-pink-100 border border-transparent';
+                        const color = c.color || '#EC4899';
+                        const desc = c.description ? `<p class="text-[10px] text-pink-200/50 truncate">${c.description}</p>` : '';
+                        const safeName = c.name.replace(/'/g, "\\'");
+
+                        return `
+                            <div data-cat-item="${c.name}" onclick="selectCustomCategory('${safeName}', '${color}')" class="p-2.5 rounded-xl ${activeClass} transition-all cursor-pointer flex items-center justify-between group">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <span class="w-2.5 h-2.5 rounded-full flex-shrink-0 shadow-sm" style="background-color: ${color}; box-shadow: 0 0 8px ${color}80;"></span>
+                                    <div class="min-w-0">
+                                        <span class="text-xs font-medium block truncate">${c.name}</span>
+                                        ${desc}
+                                    </div>
+                                </div>
+                                ${isCur ? '<span class="cat-check-icon text-pink-400 text-xs font-bold">✓</span>' : ''}
+                            </div>
+                        `;
+                    };
+
+                    if (matchedCats.length > 0) {
+                        html += `
+                            <div class="px-2.5 pt-1.5 pb-1 text-[10px] font-bold tracking-wider text-pink-400 uppercase flex items-center gap-1.5">
+                                <span>🌸 Saran ${activeTxType === 'income' ? 'Pemasukan' : 'Pengeluaran'}</span>
+                            </div>
+                        `;
+                        matchedCats.forEach(c => { html += renderItem(c); });
                     }
 
-                    formCatSelect.innerHTML = html;
-                }
+                    if (otherCats.length > 0) {
+                        html += `
+                            <div class="px-2.5 pt-2.5 pb-1 text-[10px] font-bold tracking-wider text-pink-300/60 uppercase border-t border-pink-500/15 mt-1 flex items-center gap-1.5">
+                                <span>📂 Kategori Lainnya</span>
+                            </div>
+                        `;
+                        otherCats.forEach(c => { html += renderItem(c); });
+                    }
 
-                if (selectedCategory) {
-                    formCatSelect.value = selectedCategory;
+                    catPanel.innerHTML = html;
+
+                    // Tentukan kategori terpilih
+                    let toSelect = selectedCategory || hiddenCatInput.value;
+                    if (!toSelect && matchedCats.length > 0) {
+                        toSelect = matchedCats[0].name;
+                    }
+                    if (toSelect) {
+                        const found = allCategories.find(c => c.name === toSelect);
+                        selectCustomCategory(toSelect, found ? found.color : '#EC4899', false);
+                    }
                 }
             }
 
@@ -2465,8 +2601,43 @@
             openAddTxModal();
             setTxType('transfer');
         });
-        document.getElementById('btn-close-modal-tx')?.addEventListener('click', () => modalTx.classList.add('hidden'));
-        document.getElementById('btn-cancel-modal-tx')?.addEventListener('click', () => modalTx.classList.add('hidden'));
+        document.getElementById('btn-close-modal-tx')?.addEventListener('click', () => {
+            modalTx.classList.add('hidden');
+            document.getElementById('custom-cat-panel')?.classList.add('hidden');
+            document.getElementById('custom-cat-chevron')?.classList.remove('rotate-180');
+        });
+        document.getElementById('btn-cancel-modal-tx')?.addEventListener('click', () => {
+            modalTx.classList.add('hidden');
+            document.getElementById('custom-cat-panel')?.classList.add('hidden');
+            document.getElementById('custom-cat-chevron')?.classList.remove('rotate-180');
+        });
+
+        // Toggle custom category dropdown
+        document.getElementById('btn-custom-cat-toggle')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const panel = document.getElementById('custom-cat-panel');
+            const chevron = document.getElementById('custom-cat-chevron');
+            if (!panel) return;
+            const isClosed = panel.classList.contains('hidden');
+            if (isClosed) {
+                panel.classList.remove('hidden');
+                if (chevron) chevron.classList.add('rotate-180');
+            } else {
+                panel.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+        });
+
+        // Close custom category dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const container = document.getElementById('custom-cat-dropdown-container');
+            const panel = document.getElementById('custom-cat-panel');
+            const chevron = document.getElementById('custom-cat-chevron');
+            if (container && panel && !container.contains(e.target)) {
+                panel.classList.add('hidden');
+                if (chevron) chevron.classList.remove('rotate-180');
+            }
+        });
 
         // Form Transaction Submit (Enforce required Category & Notes, atomic balance updates for CRUD)
         formTx.onsubmit = async (e) => {
