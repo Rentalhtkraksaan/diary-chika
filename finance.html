@@ -852,11 +852,11 @@
 
             <!-- Transaction Type Switcher Tabs -->
             <div class="grid grid-cols-3 gap-2 p-1.5 bg-white/5 rounded-2xl mb-6">
-                <button type="button" class="tx-type-tab-btn active py-2 rounded-xl text-xs font-bold transition-all bg-emerald-500/20 text-emerald-400 border border-emerald-500/30" data-type="income">
-                    🟢 Pemasukan
-                </button>
-                <button type="button" class="tx-type-tab-btn py-2 rounded-xl text-xs font-bold transition-all text-gray-400 hover:text-white" data-type="expense">
+                <button type="button" class="tx-type-tab-btn active py-2 rounded-xl text-xs font-bold transition-all bg-rose-500/20 text-rose-400 border border-rose-500/30" data-type="expense">
                     🔴 Pengeluaran
+                </button>
+                <button type="button" class="tx-type-tab-btn py-2 rounded-xl text-xs font-bold transition-all text-gray-400 hover:text-white" data-type="income">
+                    🟢 Pemasukan
                 </button>
                 <button type="button" class="tx-type-tab-btn py-2 rounded-xl text-xs font-bold transition-all text-gray-400 hover:text-white" data-type="transfer">
                     🔄 Transfer
@@ -865,7 +865,7 @@
 
             <form id="form-transaction" class="space-y-4">
                 <input type="hidden" id="form-tx-id" value="">
-                <input type="hidden" id="form-tx-type" value="income">
+                <input type="hidden" id="form-tx-type" value="expense">
 
                 <!-- Regular Wallet Selector (for Income & Expense) -->
                 <div id="wrapper-single-wallet" class="space-y-1">
@@ -1177,11 +1177,14 @@
         let isBalanceHidden = false;
         let enteredPin = "";
         let activePin = localStorage.getItem('chika_pin') || "1234";
-        let activeTxType = 'income';
+        let activeTxType = 'expense';
 
         // Default categories seed
         const DEFAULT_CATEGORIES = {
             cat_gaji: { id: 'cat_gaji', name: 'Gaji & Pendapatan', type: 'income', color: '#10B981', description: 'Gaji bulanan, transfer masuk, bonus, freelance, dan komisi' },
+            cat_bonus: { id: 'cat_bonus', name: 'Bonus & Hadiah', type: 'income', color: '#F59E0B', description: 'Bonus kerja, THR, hadiah, cashback, giveaway, dan uang saku' },
+            cat_bisnis: { id: 'cat_bisnis', name: 'Bisnis & Penjualan', type: 'income', color: '#38BDF8', description: 'Penjualan produk, omset jualan, dan project sampingan' },
+            cat_investasi: { id: 'cat_investasi', name: 'Investasi & Passive Income', type: 'income', color: '#818CF8', description: 'Bunga tabungan, dividen saham, dan keuntungan aset' },
             cat_makanan: { id: 'cat_makanan', name: 'Makanan & Minuman', type: 'expense', color: '#F97316', description: 'Makan pokok harian, jajan camilan, kafe, kopi, dan boba' },
             cat_transport: { id: 'cat_transport', name: 'Transportasi', type: 'expense', color: '#3B82F6', description: 'Bensin motor/mobil, ojek online, tiket, parkir, dan servis' },
             cat_belanja: { id: 'cat_belanja', name: 'Belanja & Kebutuhan', type: 'expense', color: '#EC4899', description: 'Belanja harian, supermarket, perlengkapan kos/rumah, dan pakaian' },
@@ -1725,6 +1728,18 @@
                 set(ref(db, 'categories'), DEFAULT_CATEGORIES);
                 return;
             }
+
+            // Tambahkan kategori default baru jika belum ada (tanpa menimpa kategori lama/custom)
+            let missingDefaults = {};
+            for (const [key, val] of Object.entries(DEFAULT_CATEGORIES)) {
+                if (!data[key] && !Object.values(data).some(c => c.name === val.name)) {
+                    missingDefaults[key] = val;
+                }
+            }
+            if (Object.keys(missingDefaults).length > 0) {
+                update(ref(db, 'categories'), missingDefaults);
+            }
+
             allCategories = Object.keys(data).map(k => ({ id: k, ...data[k] }));
             const badgeCat = document.getElementById('badge-categories-count');
             if (badgeCat) badgeCat.textContent = allCategories.length;
@@ -1773,22 +1788,36 @@
             const formCatSelect = document.getElementById('form-tx-category');
             const filterCatSelect = document.getElementById('filter-category-select');
 
-            // 1. Transaction Form Category Select (filtered by activeTxType)
+            // 1. Transaction Form Category Select
             if (formCatSelect) {
-                let availableCats = [];
                 if (activeTxType === 'transfer') {
-                    availableCats = [{ name: 'Transfer Antar-Dompet' }];
-                } else if (activeTxType === 'income') {
-                    availableCats = allCategories.filter(c => c.type === 'income' || c.type === 'both');
+                    formCatSelect.innerHTML = '<option value="Transfer Antar-Dompet">Transfer Antar-Dompet</option>';
                 } else {
-                    availableCats = allCategories.filter(c => c.type === 'expense' || c.type === 'both');
+                    const matchedCats = allCategories.filter(c => c.type === activeTxType || c.type === 'both');
+                    const otherCats = allCategories.filter(c => c.type !== activeTxType && c.type !== 'both');
+
+                    let html = '';
+                    if (matchedCats.length > 0 && otherCats.length > 0) {
+                        html += `<optgroup label="Saran ${activeTxType === 'income' ? 'Pemasukan' : 'Pengeluaran'}">`;
+                        matchedCats.forEach(c => {
+                            html += `<option value="${c.name}">${c.name}</option>`;
+                        });
+                        html += '</optgroup>';
+
+                        html += '<optgroup label="Semua Kategori Lainnya">';
+                        otherCats.forEach(c => {
+                            html += `<option value="${c.name}">${c.name}</option>`;
+                        });
+                        html += '</optgroup>';
+                    } else {
+                        allCategories.forEach(c => {
+                            html += `<option value="${c.name}">${c.name}</option>`;
+                        });
+                    }
+
+                    formCatSelect.innerHTML = html;
                 }
 
-                if (availableCats.length === 0) {
-                    availableCats = allCategories;
-                }
-
-                formCatSelect.innerHTML = availableCats.map(c => `<option value="${c.name}">${c.name}</option>`).join('');
                 if (selectedCategory) {
                     formCatSelect.value = selectedCategory;
                 }
@@ -2385,7 +2414,7 @@
             document.getElementById('modal-tx-title').textContent = 'Catat Transaksi Baru';
             document.getElementById('btn-save-tx').textContent = 'Simpan Transaksi 💖';
             document.getElementById('form-tx-date').value = new Date().toISOString().split('T')[0];
-            setTxType('income');
+            setTxType('expense');
             modalTx.classList.remove('hidden');
         };
 
