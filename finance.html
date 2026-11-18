@@ -2468,7 +2468,7 @@
                 const walletBalances = {};
                 allWallets.forEach(w => { walletBalances[w.id] = w.balance || 0; });
 
-                // If editing, revert old transaction impact first
+                // If editing, revert old transaction impact first (including Goals)
                 if (editId) {
                     const oldTx = allTransactions.find(t => t.id === editId);
                     if (oldTx) {
@@ -2486,6 +2486,16 @@
                             }
                             if (walletBalances[oldTx.targetWalletId] !== undefined) {
                                 walletBalances[oldTx.targetWalletId] -= (oldTx.amount || 0);
+                            }
+                        }
+
+                        // Revert Goal impact if old transaction was linked to goal
+                        const oldGoal = oldTx.goalId ? allGoals.find(g => g.id === oldTx.goalId) : (oldTx.category === 'Tabungan & Impian' ? allGoals.find(g => oldTx.notes && oldTx.notes.includes(g.name)) : null);
+                        if (oldGoal) {
+                            const revertedGoalBal = Math.max(0, (oldGoal.currentAmount || 0) - (oldTx.amount || 0));
+                            updates[`goals/${oldGoal.id}/currentAmount`] = revertedGoalBal;
+                            if (oldTx.allocId) {
+                                updates[`goals/${oldGoal.id}/allocations/${oldTx.allocId}`] = null;
                             }
                         }
                     }
@@ -2544,6 +2554,28 @@
                     }
 
                     updates[`wallets/${walletId}/balance`] = walletBalances[walletId];
+
+                    // Check if new/edited transaction is linked to goal
+                    let linkedGoalId = null;
+                    if (editId) {
+                        const prevTx = allTransactions.find(t => t.id === editId);
+                        if (prevTx && prevTx.goalId) linkedGoalId = prevTx.goalId;
+                    }
+                    if (!linkedGoalId && category === 'Tabungan & Impian') {
+                        const matchedGoal = allGoals.find(g => notes && notes.includes(g.name));
+                        if (matchedGoal) linkedGoalId = matchedGoal.id;
+                    }
+
+                    if (type === 'expense' && linkedGoalId) {
+                        const targetGoal = allGoals.find(g => g.id === linkedGoalId);
+                        if (targetGoal) {
+                            const curBal = updates[`goals/${linkedGoalId}/currentAmount`] !== undefined 
+                                ? updates[`goals/${linkedGoalId}/currentAmount`] 
+                                : (targetGoal.currentAmount || 0);
+                            updates[`goals/${linkedGoalId}/currentAmount`] = curBal + amount;
+                        }
+                    }
+
                     updates[`transactions/${txId}`] = {
                         id: txId,
                         type,
@@ -2553,6 +2585,7 @@
                         category,
                         notes,
                         date,
+                        goalId: linkedGoalId || null,
                         createdAt: editId ? (allTransactions.find(t => t.id === editId)?.createdAt || Date.now()) : Date.now()
                     };
                 }
@@ -2584,19 +2617,32 @@
             }
         };
 
-        // Delete Transaction & Revert Balance atomically
+                // Delete Transaction & Revert Balance atomically (Two-Way Sync with Goals)
         window.deleteTransaction = async (txId) => {
             const tx = allTransactions.find(t => t.id === txId);
             if (!tx) return;
 
+            // Check if this transaction is linked to a goal
+            const isGoalTx = tx.goalId || tx.category === 'Tabungan & Impian' || (tx.notes && tx.notes.includes('Alokasi dana untuk:'));
+            let goalInfo = null;
+            if (tx.goalId) {
+                goalInfo = allGoals.find(g => g.id === tx.goalId);
+            } else if (tx.category === 'Tabungan & Impian' || (tx.notes && tx.notes.includes('Alokasi dana untuk:'))) {
+                goalInfo = allGoals.find(g => tx.notes && tx.notes.includes(g.name));
+            }
+
+            const confirmMessage = isGoalTx && goalInfo
+                ? `Transaksi ini adalah <b>alokasi tabungan untuk target "${goalInfo.name}"</b> senilai <b class="text-pink-300 font-mono">${formatRupiah(tx.amount)}</b>.<br><br>Jika dihapus:<br>1. Saldo dompet <b>${tx.walletName || 'sumber'}</b> akan <b>otomatis kembali / refund (+ ${formatRupiah(tx.amount)})</b>.<br>2. Saldo di target <b>${goalInfo.name}</b> akan <b>otomatis dipotong berkurang (- ${formatRupiah(tx.amount)})</b>.<br><br><span class="text-xs text-pink-300/80">Apakah kamu yakin ingin membatalkan/menghapus alokasi ini?</span>`
+                : `Apakah kamu yakin ingin menghapus transaksi <b>"${tx.notes || tx.category}"</b> senilai <b>${formatRupiah(tx.amount)}</b>?<br><br><span class="text-xs text-pink-300">Saldo dompet terkait akan disesuaikan otomatis.</span>`;
+
             const { isConfirmed } = await Swal.fire({
                 title: 'Hapus Transaksi? 🗑️',
-                html: `Apakah kamu yakin ingin menghapus transaksi <b>"${tx.notes || tx.category}"</b> senilai <b>${formatRupiah(tx.amount)}</b>?<br><br><span class="text-xs text-pink-300">Saldo dompet terkait akan disesuaikan otomatis.</span>`,
+                html: confirmMessage,
                 icon: 'warning',
                 showCancelButton: true,
                 confirmButtonColor: '#F43F5E',
                 cancelButtonColor: '#4B5563',
-                confirmButtonText: 'Ya, Hapus',
+                confirmButtonText: 'Ya, Hapus & Kembalikan Saldo',
                 cancelButtonText: 'Batal',
                 background: '#140c1a',
                 color: '#fdf2f8',
@@ -2607,6 +2653,8 @@
 
             try {
                 const updates = {};
+
+                // 1. Revert wallet balance (Uang masuk lagi ke dompet asal)
                 if (tx.type === 'income') {
                     const w = allWallets.find(x => x.id === tx.walletId);
                     if (w) updates[`wallets/${tx.walletId}/balance`] = (w.balance || 0) - tx.amount;
@@ -2620,14 +2668,35 @@
                     if (tgt) updates[`wallets/${tx.targetWalletId}/balance`] = (tgt.balance || 0) - tx.amount;
                 }
 
+                // 2. Revert Goal collected balance and allocation history (Saldo target tabungan berkurang otomatis)
+                if (goalInfo) {
+                    const newGoalBalance = Math.max(0, (goalInfo.currentAmount || 0) - (tx.amount || 0));
+                    updates[`goals/${goalInfo.id}/currentAmount`] = newGoalBalance;
+
+                    if (tx.allocId) {
+                        updates[`goals/${goalInfo.id}/allocations/${tx.allocId}`] = null;
+                    } else if (goalInfo.allocations) {
+                        // Match and clean up corresponding allocation in history
+                        Object.keys(goalInfo.allocations).forEach(aKey => {
+                            const a = goalInfo.allocations[aKey];
+                            if (a.createdAt === tx.createdAt || a.id === tx.id || a.amount === tx.amount) {
+                                updates[`goals/${goalInfo.id}/allocations/${aKey}`] = null;
+                            }
+                        });
+                    }
+                }
+
+                // 3. Delete transaction record
                 updates[`transactions/${txId}`] = null;
                 await update(ref(db), updates);
 
                 Swal.fire({
                     icon: 'success',
-                    title: 'Transaksi Dihapus! ✨',
-                    text: 'Saldo dompet telah disesuaikan kembali.',
-                    timer: 1500,
+                    title: 'Transaksi Berhasil Dihapus! ✨',
+                    html: isGoalTx && goalInfo
+                        ? `Saldo <b class="text-emerald-400 font-mono">${formatRupiah(tx.amount)}</b> telah dikembalikan ke dompet <b>${tx.walletName}</b>, dan saldo target <b>${goalInfo.name}</b> otomatis berkurang.`
+                        : 'Saldo dompet telah disesuaikan kembali secara otomatis.',
+                    timer: 2000,
                     showConfirmButton: false,
                     background: '#140c1a',
                     color: '#fdf2f8',
@@ -3149,7 +3218,7 @@
                 updates[`wallets/${walletId}/balance`] = (wallet.balance || 0) - amount;
                 updates[`goals/${goalId}/currentAmount`] = (goal.currentAmount || 0) + amount;
 
-                // Save transaction
+                // Save transaction (with goalId and allocId linked for two-way sync)
                 updates[`transactions/${txId}`] = {
                     id: txId,
                     type: 'expense',
@@ -3160,6 +3229,7 @@
                     notes: `Alokasi dana untuk: ${goal.name}`,
                     date: dateStr,
                     goalId: goalId,
+                    allocId: allocId,
                     createdAt: now
                 };
 
